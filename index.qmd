@@ -144,3 +144,38 @@ get_pums_variables(2020)
 The parser was shown to run successfully for 2024. Now we run it on all years
 and save the results for later code to reference.
 
+
+## Building the lists for all four years
+
+One list per year is built and saved to `data/pums_variables.rds`. The
+`if` statement prevents redownloading on rerenders.The saved lists are
+then read back in as `pums_vars`.
+
+```{r}
+#| label: build-variable-lists
+
+if (!file.exists("data/pums_variables.rds")) {
+  pums_variable_lists <- lapply(2021:2024, get_pums_variables)
+  names(pums_variable_lists) <- 2021:2024
+  dir.create("data", showWarnings = FALSE)
+  saveRDS(pums_variable_lists, "data/pums_variables.rds")
+}
+
+pums_vars <- readRDS("data/pums_variables.rds")
+```
+
+Check the lists. The list is indexed by year and each year holds the 15 variables.
+
+```{r}
+#| label: check-variable-lists
+
+names(pums_vars)
+names(pums_vars[["2024"]])
+pums_vars[["2024"]]$SEX$items
+length(pums_vars[["2021"]]$STATE$items)
+```
+
+The first two lines confirm the four years and the 15 variables per year. The
+third shows the mappings for `SEX`. The last shows that the state list has 52 entries, the 50 states, DC, and Puerto Rico. Puerto Rico will be dropped when state input is validated.
+
+
