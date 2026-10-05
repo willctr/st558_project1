@@ -329,18 +329,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>), <span class="dv">1</span>, <span class="dv">300</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[["SEX","PWGTP","AGEP","JWAP","JWMNP","SCHL","AGEP","JWMNP","state"],
-["1","76","30","88","45","22","30","45","37"],
-["1","77","30","94","45","20","30","45","37"],
-["1","279","30","103","45","21","30","45","37"],
-["1","50","30","85","45","17","30","45","37"],
-["1","12","30","79","45","16","30","45",</code></pre>
+["1","60","30","98","45","20","30","45","37"],
+["1","42","30","91","45","18","30","45","37"],
+["2","51","30","91","45","23","30","45","37"],
+["2","45","30","89","45","18","30","45","37"],
+["2","88","30","103","45","19","30","45","</code></pre>
 </div>
 </div>
 <p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
 <p>The first helper turns the JSON text into a tibble. It uses the first row as the column names and drops any repeated column. First it checks if the return is JSON to ensure there is no error response.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Turn the text of a Census API reply into a tibble of character columns.</span></span>
-<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The reply is an array of arrays: row 1 is the header, the rest is data.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># turn the text of a Census API reply into a tibble of character columns.</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># the result is an array of arrays: row 1 is the header, the rest is data.</span></span>
 <span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>parse_census_json <span class="ot">&lt;-</span> <span class="cf">function</span>(json_text) {</span>
 <span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">validate</span>(json_text)) {</span>
 <span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The Census API did not return JSON. The reply began: "</span>,</span>
@@ -355,7 +355,7 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 <p>The second helper works on the object <code>GET()</code> returns. It checks the HTTP status and stops with the API’s own message when something is wrong. For example, a misspelled variable name produces a status <code>400</code> with a short explanation, and a query that matches no records produces a <code>204</code>. Otherwise it passes the text to the first helper.</p>
 <div class="cell">
-<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert the object returned by GET() into a tibble.</span></span>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert the object returned by GET() into a tibble</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>pums_response_to_tibble <span class="ot">&lt;-</span> <span class="cf">function</span>(resp) {</span>
 <span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  reply <span class="ot">&lt;-</span> <span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>)</span>
 <span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">status_code</span>(resp) <span class="sc">==</span> <span class="dv">204</span>) {</span>
@@ -376,20 +376,108 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 58 × 7
    SEX   PWGTP AGEP  JWAP  JWMNP SCHL  state
    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
- 1 1     76    30    88    45    22    37   
- 2 1     77    30    94    45    20    37   
- 3 1     279   30    103   45    21    37   
- 4 1     50    30    85    45    17    37   
- 5 1     12    30    79    45    16    37   
- 6 1     64    30    79    45    22    37   
- 7 2     93    30    76    45    21    37   
- 8 2     204   30    235   45    21    37   
- 9 2     7     30    79    45    16    37   
-10 1     118   30    91    45    18    37   
+ 1 1     60    30    98    45    20    37   
+ 2 1     42    30    91    45    18    37   
+ 3 2     51    30    91    45    23    37   
+ 4 2     45    30    89    45    18    37   
+ 5 2     88    30    103   45    19    37   
+ 6 1     80    30    97    45    21    37   
+ 7 1     87    30    79    45    16    37   
+ 8 2     160   30    214   45    18    37   
+ 9 1     96    30    73    45    21    37   
+10 1     41    30    103   45    21    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
-<p>The repeated <code>AGEP</code> and <code>JWMNP</code> columns are gone, <code>state</code> is kept, and every column is consistently a character vector.</p>
+<p>The repeated <code>AGEP</code> and <code>JWMNP</code> columns are dropped, <code>state</code> is kept, and every column is consistently a character vector.</p>
+</section>
+<section id="converting-variable-types" class="level2">
+<h2 class="anchored" data-anchor-id="converting-variable-types">Converting variable types</h2>
+<p>The tibble from the last section is all text. Numeric variables need to be numbers and categorical variables need to be factors with labels. Both helpers use the lists saved earlier in <code>pums_vars</code>, so the labels always match the survey year.</p>
+<p>Some numeric codes mean “not applicable”. For <code>JWMNP</code> (travel time to work), <code>0</code> means the person is not a worker or worked from home, and in 2023 <code>888</code> means the value was suppressed. <code>GASP</code> and <code>GRPIP</code> have similar codes. If they remained as numbers, they would skew every mean, so they become <code>NA</code>. The helper finds them from the labels (a label starting with “N/A” or “Suppressed”). A real zero is kept: for <code>AGEP</code>, <code>0</code> means under 1 year old. Codes have to be compared as numbers. The API sends <code>1</code> where the variables file has <code>01</code>, and the 2021 file uses <code>00</code> for an age of 0. Matching as text would miss these, so both sides are converted to numbers first.</p>
+<p>For categorical variables the N/A code is kept as its own level.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb31"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb31-1"><a href="#cb31-1" aria-hidden="true" tabindex="-1"></a><span class="co"># codes that mean "not applicable" or "suppressed" for one variable. they are</span></span>
+<span id="cb31-2"><a href="#cb31-2" aria-hidden="true" tabindex="-1"></a><span class="co"># found from the labels, so the rule works for every year's file</span></span>
+<span id="cb31-3"><a href="#cb31-3" aria-hidden="true" tabindex="-1"></a>na_codes_for <span class="ot">&lt;-</span> <span class="cf">function</span>(var_info) {</span>
+<span id="cb31-4"><a href="#cb31-4" aria-hidden="true" tabindex="-1"></a>  items <span class="ot">&lt;-</span> var_info<span class="sc">$</span>items</span>
+<span id="cb31-5"><a href="#cb31-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(items) <span class="sc">==</span> <span class="dv">0</span>) <span class="fu">return</span>(<span class="fu">character</span>(<span class="dv">0</span>))</span>
+<span id="cb31-6"><a href="#cb31-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(items)[<span class="fu">grepl</span>(<span class="st">"^(N/A|Suppressed)"</span>, items)]</span>
+<span id="cb31-7"><a href="#cb31-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-8"><a href="#cb31-8" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb31-9"><a href="#cb31-9" aria-hidden="true" tabindex="-1"></a><span class="co"># character codes -&gt; numbers, with the variable's N/A codes set to NA</span></span>
+<span id="cb31-10"><a href="#cb31-10" aria-hidden="true" tabindex="-1"></a>convert_numeric <span class="ot">&lt;-</span> <span class="cf">function</span>(x, var_info) {</span>
+<span id="cb31-11"><a href="#cb31-11" aria-hidden="true" tabindex="-1"></a>  values <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(x)</span>
+<span id="cb31-12"><a href="#cb31-12" aria-hidden="true" tabindex="-1"></a>  values[values <span class="sc">%in%</span> <span class="fu">as.numeric</span>(<span class="fu">na_codes_for</span>(var_info))] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb31-13"><a href="#cb31-13" aria-hidden="true" tabindex="-1"></a>  values</span>
+<span id="cb31-14"><a href="#cb31-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb31-15"><a href="#cb31-15" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb31-16"><a href="#cb31-16" aria-hidden="true" tabindex="-1"></a><span class="co"># character codes -&gt; factor whose levels are the variable's labels, in code</span></span>
+<span id="cb31-17"><a href="#cb31-17" aria-hidden="true" tabindex="-1"></a><span class="co"># order. codes are matched as numbers. unknown codes trigger a warning</span></span>
+<span id="cb31-18"><a href="#cb31-18" aria-hidden="true" tabindex="-1"></a>convert_factor <span class="ot">&lt;-</span> <span class="cf">function</span>(x, var_info) {</span>
+<span id="cb31-19"><a href="#cb31-19" aria-hidden="true" tabindex="-1"></a>  codes   <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(x)</span>
+<span id="cb31-20"><a href="#cb31-20" aria-hidden="true" tabindex="-1"></a>  items   <span class="ot">&lt;-</span> var_info<span class="sc">$</span>items</span>
+<span id="cb31-21"><a href="#cb31-21" aria-hidden="true" tabindex="-1"></a>  known   <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">names</span>(items))</span>
+<span id="cb31-22"><a href="#cb31-22" aria-hidden="true" tabindex="-1"></a>  unknown <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">unique</span>(codes[<span class="sc">!</span><span class="fu">is.na</span>(codes)]), known)</span>
+<span id="cb31-23"><a href="#cb31-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(unknown) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb31-24"><a href="#cb31-24" aria-hidden="true" tabindex="-1"></a>    <span class="fu">warning</span>(<span class="st">"Codes not found in the variable list: "</span>,</span>
+<span id="cb31-25"><a href="#cb31-25" aria-hidden="true" tabindex="-1"></a>            <span class="fu">paste</span>(unknown, <span class="at">collapse =</span> <span class="st">", "</span>), <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb31-26"><a href="#cb31-26" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb31-27"><a href="#cb31-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">factor</span>(codes, <span class="at">levels =</span> known, <span class="at">labels =</span> <span class="fu">unname</span>(items))</span>
+<span id="cb31-28"><a href="#cb31-28" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>A few direct calls show the behavior. The first turns the N/A and suppressed codes into <code>NA</code>, the second keeps a real zero, and the third shows that the API’s <code>1</code> finds the file’s <code>01</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb32"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb32-1"><a href="#cb32-1" aria-hidden="true" tabindex="-1"></a><span class="fu">convert_numeric</span>(<span class="fu">c</span>(<span class="st">"12"</span>, <span class="st">"0"</span>, <span class="st">"888"</span>), pums_vars[[<span class="st">"2023"</span>]]<span class="sc">$</span>JWMNP)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 12 NA NA</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb34"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb34-1"><a href="#cb34-1" aria-hidden="true" tabindex="-1"></a><span class="fu">convert_numeric</span>(<span class="fu">c</span>(<span class="st">"0"</span>, <span class="st">"5"</span>), pums_vars[[<span class="st">"2024"</span>]]<span class="sc">$</span>AGEP)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 0 5</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb36"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb36-1"><a href="#cb36-1" aria-hidden="true" tabindex="-1"></a><span class="fu">as.character</span>(<span class="fu">convert_factor</span>(<span class="fu">c</span>(<span class="st">"1"</span>, <span class="st">"16"</span>, <span class="st">"22"</span>), pums_vars[[<span class="st">"2024"</span>]]<span class="sc">$</span>SCHL))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "No schooling completed"      "Regular high school diploma"
+[3] "Master's degree"            </code></pre>
+</div>
+</div>
+<p>Applying the helpers to the tibble converts the weight, age, and travel time to numbers and <code>SEX</code> and <code>SCHL</code> to factors.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb38"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb38-1"><a href="#cb38-1" aria-hidden="true" tabindex="-1"></a>lists_2024 <span class="ot">&lt;-</span> pums_vars[[<span class="st">"2024"</span>]]</span>
+<span id="cb38-2"><a href="#cb38-2" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb38-3"><a href="#cb38-3" aria-hidden="true" tabindex="-1"></a>census_typed <span class="ot">&lt;-</span> census_raw <span class="sc">|&gt;</span></span>
+<span id="cb38-4"><a href="#cb38-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(</span>
+<span id="cb38-5"><a href="#cb38-5" aria-hidden="true" tabindex="-1"></a>    <span class="at">PWGTP =</span> <span class="fu">convert_numeric</span>(PWGTP, lists_2024<span class="sc">$</span>PWGTP),</span>
+<span id="cb38-6"><a href="#cb38-6" aria-hidden="true" tabindex="-1"></a>    <span class="at">AGEP  =</span> <span class="fu">convert_numeric</span>(AGEP,  lists_2024<span class="sc">$</span>AGEP),</span>
+<span id="cb38-7"><a href="#cb38-7" aria-hidden="true" tabindex="-1"></a>    <span class="at">JWMNP =</span> <span class="fu">convert_numeric</span>(JWMNP, lists_2024<span class="sc">$</span>JWMNP),</span>
+<span id="cb38-8"><a href="#cb38-8" aria-hidden="true" tabindex="-1"></a>    <span class="at">SEX   =</span> <span class="fu">convert_factor</span>(SEX,  lists_2024<span class="sc">$</span>SEX),</span>
+<span id="cb38-9"><a href="#cb38-9" aria-hidden="true" tabindex="-1"></a>    <span class="at">SCHL  =</span> <span class="fu">convert_factor</span>(SCHL, lists_2024<span class="sc">$</span>SCHL)</span>
+<span id="cb38-10"><a href="#cb38-10" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb38-11"><a href="#cb38-11" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>census_typed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 58 × 7
+   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                                     state
+   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                    &lt;chr&gt;
+ 1 Male      60    30 98       45 Associate's degree                       37   
+ 2 Male      42    30 91       45 Some college, but less than 1 year       37   
+ 3 Female    51    30 91       45 Professional degree beyond a bachelor's… 37   
+ 4 Female    45    30 89       45 Some college, but less than 1 year       37   
+ 5 Female    88    30 103      45 1 or more years of college credit, no d… 37   
+ 6 Male      80    30 97       45 Bachelor's degree                        37   
+ 7 Male      87    30 79       45 Regular high school diploma              37   
+ 8 Female   160    30 214      45 Some college, but less than 1 year       37   
+ 9 Male      96    30 73       45 Bachelor's degree                        37   
+10 Male      41    30 103      45 Bachelor's degree                        37   
+# ℹ 48 more rows</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(census_typed<span class="sc">$</span>SEX)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "Male"   "Female"</code></pre>
+</div>
+</div>
+<p><code>PWGTP</code>, <code>AGEP</code>, and <code>JWMNP</code> are now numeric (<code>&lt;dbl&gt;</code>), and <code>SEX</code> is a factor with the levels Male and Female. <code>JWAP</code>. The arrival time at work is still text and will use a helper to convert to datetime.</p>
 
 
 </section>
