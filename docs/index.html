@@ -329,11 +329,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>), <span class="dv">1</span>, <span class="dv">300</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[["SEX","PWGTP","AGEP","JWAP","JWMNP","SCHL","AGEP","JWMNP","state"],
-["1","60","30","98","45","20","30","45","37"],
-["1","42","30","91","45","18","30","45","37"],
-["2","51","30","91","45","23","30","45","37"],
-["2","45","30","89","45","18","30","45","37"],
-["2","88","30","103","45","19","30","45","</code></pre>
+["1","232","30","82","45","21","30","45","37"],
+["1","153","30","67","45","16","30","45","37"],
+["1","240","30","55","45","16","30","45","37"],
+["1","129","30","109","45","19","30","45","37"],
+["1","180","30","187","45","16","30",</code></pre>
 </div>
 </div>
 <p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
@@ -376,16 +376,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 58 × 7
    SEX   PWGTP AGEP  JWAP  JWMNP SCHL  state
    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
- 1 1     60    30    98    45    20    37   
- 2 1     42    30    91    45    18    37   
- 3 2     51    30    91    45    23    37   
- 4 2     45    30    89    45    18    37   
- 5 2     88    30    103   45    19    37   
- 6 1     80    30    97    45    21    37   
- 7 1     87    30    79    45    16    37   
- 8 2     160   30    214   45    18    37   
- 9 1     96    30    73    45    21    37   
-10 1     41    30    103   45    21    37   
+ 1 1     232   30    82    45    21    37   
+ 2 1     153   30    67    45    16    37   
+ 3 1     240   30    55    45    16    37   
+ 4 1     129   30    109   45    19    37   
+ 5 1     180   30    187   45    16    37   
+ 6 1     236   30    79    45    22    37   
+ 7 1     120   30    49    45    16    37   
+ 8 1     129   30    91    45    21    37   
+ 9 1     68    30    103   45    21    37   
+10 1     73    30    271   45    16    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -458,18 +458,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>census_typed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                                     state
-   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                    &lt;chr&gt;
- 1 Male      60    30 98       45 Associate's degree                       37   
- 2 Male      42    30 91       45 Some college, but less than 1 year       37   
- 3 Female    51    30 91       45 Professional degree beyond a bachelor's… 37   
- 4 Female    45    30 89       45 Some college, but less than 1 year       37   
- 5 Female    88    30 103      45 1 or more years of college credit, no d… 37   
- 6 Male      80    30 97       45 Bachelor's degree                        37   
- 7 Male      87    30 79       45 Regular high school diploma              37   
- 8 Female   160    30 214      45 Some college, but less than 1 year       37   
- 9 Male      96    30 73       45 Bachelor's degree                        37   
-10 Male      41    30 103      45 Bachelor's degree                        37   
+   SEX   PWGTP  AGEP JWAP  JWMNP SCHL                                      state
+   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                     &lt;chr&gt;
+ 1 Male    232    30 82       45 Bachelor's degree                         37   
+ 2 Male    153    30 67       45 Regular high school diploma               37   
+ 3 Male    240    30 55       45 Regular high school diploma               37   
+ 4 Male    129    30 109      45 1 or more years of college credit, no de… 37   
+ 5 Male    180    30 187      45 Regular high school diploma               37   
+ 6 Male    236    30 79       45 Master's degree                           37   
+ 7 Male    120    30 49       45 Regular high school diploma               37   
+ 8 Male    129    30 91       45 Bachelor's degree                         37   
+ 9 Male     68    30 103      45 Bachelor's degree                         37   
+10 Male     73    30 271      45 Regular high school diploma               37   
 # ℹ 48 more rows</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(census_typed<span class="sc">$</span>SEX)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -478,6 +478,81 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p><code>PWGTP</code>, <code>AGEP</code>, and <code>JWMNP</code> are now numeric (<code>&lt;dbl&gt;</code>), and <code>SEX</code> is a factor with the levels Male and Female. <code>JWAP</code>. The arrival time at work is still text and will use a helper to convert to datetime.</p>
+</section>
+<section id="time-variables" class="level2">
+<h2 class="anchored" data-anchor-id="time-variables">Time variables</h2>
+<p>We have two times variables. <code>JWAP</code> (when the person arrives at work) and <code>JWDP</code> (when they leave for work). Neither comes as a clock time. Each value is a code for a window of time, such as “7:30 a.m. to 7:34 a.m.”. To use them as times, each window is replaced by its midpoint.</p>
+<p><code>JWAP</code> uses 5 minute windows, while <code>JWDP</code> uses 5, 10, and 30 minute windows. So the helper reads the start and end times out of each label. The midpoint is the time halfway between the two times in the label, so the midpoint of “7:30 a.m. to 7:34 a.m.” is 7:32. Codes that mean “not applicable” (not a worker, or worked from home) or “suppressed” have no window, so they become <code>NA</code>.</p>
+<p>The result is a <code>lubridate</code> period, which stores the time of day as hours, minutes, and seconds after midnight.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># "7:30 a.m." -&gt; seconds after midnight. 12 a.m. is hour 0 and 12 p.m. is</span></span>
+<span id="cb42-2"><a href="#cb42-2" aria-hidden="true" tabindex="-1"></a><span class="co"># hour 12, which is what the %% 12 handles.</span></span>
+<span id="cb42-3"><a href="#cb42-3" aria-hidden="true" tabindex="-1"></a>clock_to_seconds <span class="ot">&lt;-</span> <span class="cf">function</span>(clock) {</span>
+<span id="cb42-4"><a href="#cb42-4" aria-hidden="true" tabindex="-1"></a>  hour   <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">sub</span>(<span class="st">":.*"</span>, <span class="st">""</span>, clock))</span>
+<span id="cb42-5"><a href="#cb42-5" aria-hidden="true" tabindex="-1"></a>  minute <span class="ot">&lt;-</span> <span class="fu">as.numeric</span>(<span class="fu">sub</span>(<span class="st">"^</span><span class="sc">\\</span><span class="st">d{1,2}:(</span><span class="sc">\\</span><span class="st">d{2}).*"</span>, <span class="st">"</span><span class="sc">\\</span><span class="st">1"</span>, clock))</span>
+<span id="cb42-6"><a href="#cb42-6" aria-hidden="true" tabindex="-1"></a>  pm     <span class="ot">&lt;-</span> <span class="fu">grepl</span>(<span class="st">"p</span><span class="sc">\\</span><span class="st">.m</span><span class="sc">\\</span><span class="st">."</span>, clock)</span>
+<span id="cb42-7"><a href="#cb42-7" aria-hidden="true" tabindex="-1"></a>  (hour <span class="sc">%%</span> <span class="dv">12</span> <span class="sc">+</span> <span class="fu">ifelse</span>(pm, <span class="dv">12</span>, <span class="dv">0</span>)) <span class="sc">*</span> <span class="dv">3600</span> <span class="sc">+</span> minute <span class="sc">*</span> <span class="dv">60</span></span>
+<span id="cb42-8"><a href="#cb42-8" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb42-9"><a href="#cb42-9" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb42-10"><a href="#cb42-10" aria-hidden="true" tabindex="-1"></a><span class="co"># "7:30 a.m. to 7:34 a.m." -&gt; midpoint in seconds after midnight, or NA when</span></span>
+<span id="cb42-11"><a href="#cb42-11" aria-hidden="true" tabindex="-1"></a><span class="co"># the label has no window (N/A and suppressed codes).</span></span>
+<span id="cb42-12"><a href="#cb42-12" aria-hidden="true" tabindex="-1"></a>label_to_midpoint <span class="ot">&lt;-</span> <span class="cf">function</span>(label) {</span>
+<span id="cb42-13"><a href="#cb42-13" aria-hidden="true" tabindex="-1"></a>  clocks <span class="ot">&lt;-</span> <span class="fu">regmatches</span>(label, <span class="fu">gregexpr</span>(<span class="st">"</span><span class="sc">\\</span><span class="st">d{1,2}:</span><span class="sc">\\</span><span class="st">d{2} [ap]</span><span class="sc">\\</span><span class="st">.m</span><span class="sc">\\</span><span class="st">."</span>, label))[[<span class="dv">1</span>]]</span>
+<span id="cb42-14"><a href="#cb42-14" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(clocks) <span class="sc">!=</span> <span class="dv">2</span>) <span class="fu">return</span>(<span class="cn">NA_real_</span>)</span>
+<span id="cb42-15"><a href="#cb42-15" aria-hidden="true" tabindex="-1"></a>  start <span class="ot">&lt;-</span> <span class="fu">clock_to_seconds</span>(clocks[<span class="dv">1</span>])</span>
+<span id="cb42-16"><a href="#cb42-16" aria-hidden="true" tabindex="-1"></a>  end   <span class="ot">&lt;-</span> <span class="fu">clock_to_seconds</span>(clocks[<span class="dv">2</span>])</span>
+<span id="cb42-17"><a href="#cb42-17" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (end <span class="sc">&lt;</span> start) end <span class="ot">&lt;-</span> end <span class="sc">+</span> <span class="dv">86400</span>     <span class="co"># a window that crosses midnight</span></span>
+<span id="cb42-18"><a href="#cb42-18" aria-hidden="true" tabindex="-1"></a>  (start <span class="sc">+</span> (end <span class="sc">-</span> start) <span class="sc">/</span> <span class="dv">2</span>) <span class="sc">%%</span> <span class="dv">86400</span></span>
+<span id="cb42-19"><a href="#cb42-19" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb42-20"><a href="#cb42-20" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb42-21"><a href="#cb42-21" aria-hidden="true" tabindex="-1"></a><span class="co"># character codes -&gt; lubridate periods holding each window's midpoint.</span></span>
+<span id="cb42-22"><a href="#cb42-22" aria-hidden="true" tabindex="-1"></a><span class="co"># codes are matched as numbers, as in the other helpers.</span></span>
+<span id="cb42-23"><a href="#cb42-23" aria-hidden="true" tabindex="-1"></a>convert_time <span class="ot">&lt;-</span> <span class="cf">function</span>(x, var_info) {</span>
+<span id="cb42-24"><a href="#cb42-24" aria-hidden="true" tabindex="-1"></a>  items     <span class="ot">&lt;-</span> var_info<span class="sc">$</span>items</span>
+<span id="cb42-25"><a href="#cb42-25" aria-hidden="true" tabindex="-1"></a>  midpoints <span class="ot">&lt;-</span> <span class="fu">unname</span>(<span class="fu">vapply</span>(items, label_to_midpoint, <span class="fu">numeric</span>(<span class="dv">1</span>)))</span>
+<span id="cb42-26"><a href="#cb42-26" aria-hidden="true" tabindex="-1"></a>  midpoints[<span class="fu">names</span>(items) <span class="sc">%in%</span> <span class="fu">na_codes_for</span>(var_info)] <span class="ot">&lt;-</span> <span class="cn">NA</span></span>
+<span id="cb42-27"><a href="#cb42-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">seconds_to_period</span>(midpoints[<span class="fu">match</span>(<span class="fu">as.numeric</span>(x), <span class="fu">as.numeric</span>(<span class="fu">names</span>(items)))])</span>
+<span id="cb42-28"><a href="#cb42-28" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>In the 2024 file the code <code>088</code> is the window 7:30 a.m. to 7:34 a.m., and the API sends it as <code>88</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb43"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb43-1"><a href="#cb43-1" aria-hidden="true" tabindex="-1"></a>pums_vars[[<span class="st">"2024"</span>]]<span class="sc">$</span>JWAP<span class="sc">$</span>items[[<span class="st">"088"</span>]]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "7:30 a.m. to 7:34 a.m."</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb45"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb45-1"><a href="#cb45-1" aria-hidden="true" tabindex="-1"></a><span class="fu">convert_time</span>(<span class="st">"88"</span>, pums_vars[[<span class="st">"2024"</span>]]<span class="sc">$</span>JWAP)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "7H 32M 0S"</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb47"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb47-1"><a href="#cb47-1" aria-hidden="true" tabindex="-1"></a><span class="fu">convert_time</span>(<span class="st">"0"</span>, pums_vars[[<span class="st">"2024"</span>]]<span class="sc">$</span>JWAP)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] NA</code></pre>
+</div>
+</div>
+<p>Applying it to the tibble converts the arrival time.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb49"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb49-1"><a href="#cb49-1" aria-hidden="true" tabindex="-1"></a>census_timed <span class="ot">&lt;-</span> census_typed <span class="sc">|&gt;</span></span>
+<span id="cb49-2"><a href="#cb49-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">JWAP =</span> <span class="fu">convert_time</span>(JWAP, lists_2024<span class="sc">$</span>JWAP))</span>
+<span id="cb49-3"><a href="#cb49-3" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>census_timed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 58 × 7
+   SEX   PWGTP  AGEP JWAP       JWMNP SCHL                                 state
+   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;   &lt;dbl&gt; &lt;fct&gt;                                &lt;chr&gt;
+ 1 Male    232    30 7H 2M 0S      45 Bachelor's degree                    37   
+ 2 Male    153    30 5H 47M 0S     45 Regular high school diploma          37   
+ 3 Male    240    30 4H 47M 0S     45 Regular high school diploma          37   
+ 4 Male    129    30 9H 17M 0S     45 1 or more years of college credit, … 37   
+ 5 Male    180    30 15H 47M 0S    45 Regular high school diploma          37   
+ 6 Male    236    30 6H 47M 0S     45 Master's degree                      37   
+ 7 Male    120    30 4H 17M 0S     45 Regular high school diploma          37   
+ 8 Male    129    30 7H 47M 0S     45 Bachelor's degree                    37   
+ 9 Male     68    30 8H 47M 0S     45 Bachelor's degree                    37   
+10 Male     73    30 22H 47M 0S    45 Regular high school diploma          37   
+# ℹ 48 more rows</code></pre>
+</div>
+</div>
+<p><code>JWAP</code> is now a period column. The first row’s code <code>88</code> became 7:32, the middle of its window, and a person with no arrival time would show <code>NA</code>. With the numeric, factor, and time helpers done, every variable type the project needs can be converted.</p>
 
 
 </section>

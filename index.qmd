@@ -350,3 +350,71 @@ levels(census_typed$SEX)
 `PWGTP`, `AGEP`, and `JWMNP` are now numeric (`<dbl>`), and `SEX` is a factor
 with the levels Male and Female. `JWAP`. The arrival time at work is still
 text and will use a helper to convert to datetime.
+
+
+## Time variables
+ 
+We have two times variables. `JWAP` (when the person arrives at work) and `JWDP` (when they leave for work). Neither comes as a clock time. Each value is a code for a window of time, such as "7:30 a.m. to 7:34 a.m.". To use them as times, each window is replaced by its midpoint.
+ 
+`JWAP` uses 5 minute windows, while `JWDP` uses 5, 10, and 30 minute windows. So the helper reads the start and end times out of each label. The midpoint is the time halfway between the two times in the label, so the midpoint of "7:30 a.m. to 7:34 a.m." is 7:32. Codes that mean "not applicable" (not a worker, or worked from home) or "suppressed" have no window, so they become `NA`.
+ 
+The result is a `lubridate` period, which stores the time of day as hours, minutes, and seconds after midnight.
+ 
+```{r}
+#| label: time-helpers
+ 
+# "7:30 a.m." -> seconds after midnight. 12 a.m. is hour 0 and 12 p.m. is
+# hour 12, which is what the %% 12 handles.
+clock_to_seconds <- function(clock) {
+  hour   <- as.numeric(sub(":.*", "", clock))
+  minute <- as.numeric(sub("^\\d{1,2}:(\\d{2}).*", "\\1", clock))
+  pm     <- grepl("p\\.m\\.", clock)
+  (hour %% 12 + ifelse(pm, 12, 0)) * 3600 + minute * 60
+}
+ 
+# "7:30 a.m. to 7:34 a.m." -> midpoint in seconds after midnight, or NA when
+# the label has no window (N/A and suppressed codes).
+label_to_midpoint <- function(label) {
+  clocks <- regmatches(label, gregexpr("\\d{1,2}:\\d{2} [ap]\\.m\\.", label))[[1]]
+  if (length(clocks) != 2) return(NA_real_)
+  start <- clock_to_seconds(clocks[1])
+  end   <- clock_to_seconds(clocks[2])
+  if (end < start) end <- end + 86400     # a window that crosses midnight
+  (start + (end - start) / 2) %% 86400
+}
+ 
+# character codes -> lubridate periods holding each window's midpoint.
+# codes are matched as numbers, as in the other helpers.
+convert_time <- function(x, var_info) {
+  items     <- var_info$items
+  midpoints <- unname(vapply(items, label_to_midpoint, numeric(1)))
+  midpoints[names(items) %in% na_codes_for(var_info)] <- NA
+  seconds_to_period(midpoints[match(as.numeric(x), as.numeric(names(items)))])
+}
+```
+ 
+In the 2024 file the code `088` is the window 7:30 a.m. to 7:34 a.m., and the API sends it as `88`.
+ 
+```{r}
+#| label: example-time
+ 
+pums_vars[["2024"]]$JWAP$items[["088"]]
+convert_time("88", pums_vars[["2024"]]$JWAP)
+convert_time("0", pums_vars[["2024"]]$JWAP)
+```
+ 
+Applying it to the tibble converts the arrival time.
+ 
+```{r}
+#| label: example-timed
+ 
+census_timed <- census_typed |>
+  mutate(JWAP = convert_time(JWAP, lists_2024$JWAP))
+ 
+census_timed
+```
+ 
+`JWAP` is now a period column. The first row's code `88` became 7:32, the
+middle of its window, and a person with no arrival time would show `NA`. With
+the numeric, factor, and time helpers done, every variable type the project
+needs can be converted.
