@@ -308,6 +308,88 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>The first two lines confirm the four years and the 15 variables per year. The third shows the mappings for <code>SEX</code>. The last shows that the state list has 52 entries, the 50 states, DC, and Puerto Rico. Puerto Rico will be dropped when state input is validated.</p>
+</section>
+<section id="parsing-an-api-response" class="level2">
+<h2 class="anchored" data-anchor-id="parsing-an-api-response">Parsing an API response</h2>
+<p>A request to the PUMS API consists of the base address for the year, a <code>get=</code> list of variables, a <code>for=</code> clause for the geography, any optional filters, and the key. Before writing the main query function, one small request shows what the API sends back. This one asks for sex, person weight, age, arrival time at work, travel time to work, and education for people in North Carolina (<code>for=state:37</code>) who are 30 years old with a 45 minute commute (<code>AGEP=30&amp;JWMNP=45</code>), which keeps the response short.</p>
+<p>The key is read from the <code>CENSUS_KEY</code> environment variable instead of being typed into the document, because this code is published with the site.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>census_key <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"CENSUS_KEY"</span>)</span>
+<span id="cb23-2"><a href="#cb23-2" aria-hidden="true" tabindex="-1"></a><span class="fu">stopifnot</span>(<span class="st">"Set CENSUS_KEY in .Renviron and restart R"</span> <span class="ot">=</span> <span class="fu">nzchar</span>(census_key))</span>
+<span id="cb23-3"><a href="#cb23-3" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb23-4"><a href="#cb23-4" aria-hidden="true" tabindex="-1"></a>url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://api.census.gov/data/2024/acs/acs1/pums"</span>,</span>
+<span id="cb23-5"><a href="#cb23-5" aria-hidden="true" tabindex="-1"></a>              <span class="st">"?get=SEX,PWGTP,AGEP,JWAP,JWMNP,SCHL"</span>,</span>
+<span id="cb23-6"><a href="#cb23-6" aria-hidden="true" tabindex="-1"></a>              <span class="st">"&amp;for=state:37&amp;AGEP=30&amp;JWMNP=45"</span>,</span>
+<span id="cb23-7"><a href="#cb23-7" aria-hidden="true" tabindex="-1"></a>              <span class="st">"&amp;key="</span>, census_key)</span>
+<span id="cb23-8"><a href="#cb23-8" aria-hidden="true" tabindex="-1"></a>resp <span class="ot">&lt;-</span> <span class="fu">GET</span>(url)</span>
+<span id="cb23-9"><a href="#cb23-9" aria-hidden="true" tabindex="-1"></a><span class="fu">status_code</span>(resp)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 200</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>), <span class="dv">1</span>, <span class="dv">300</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[["SEX","PWGTP","AGEP","JWAP","JWMNP","SCHL","AGEP","JWMNP","state"],
+["1","76","30","88","45","22","30","45","37"],
+["1","77","30","94","45","20","30","45","37"],
+["1","279","30","103","45","21","30","45","37"],
+["1","50","30","85","45","17","30","45","37"],
+["1","12","30","79","45","16","30","45",</code></pre>
+</div>
+</div>
+<p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
+<p>The first helper turns the JSON text into a tibble. It uses the first row as the column names and drops any repeated column. First it checks if the return is JSON to ensure there is no error response.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Turn the text of a Census API reply into a tibble of character columns.</span></span>
+<span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># The reply is an array of arrays: row 1 is the header, the rest is data.</span></span>
+<span id="cb27-3"><a href="#cb27-3" aria-hidden="true" tabindex="-1"></a>parse_census_json <span class="ot">&lt;-</span> <span class="cf">function</span>(json_text) {</span>
+<span id="cb27-4"><a href="#cb27-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">validate</span>(json_text)) {</span>
+<span id="cb27-5"><a href="#cb27-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The Census API did not return JSON. The reply began: "</span>,</span>
+<span id="cb27-6"><a href="#cb27-6" aria-hidden="true" tabindex="-1"></a>         <span class="fu">substr</span>(json_text, <span class="dv">1</span>, <span class="dv">200</span>), <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb27-7"><a href="#cb27-7" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb27-8"><a href="#cb27-8" aria-hidden="true" tabindex="-1"></a>  mat <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(json_text)             <span class="co"># a character matrix</span></span>
+<span id="cb27-9"><a href="#cb27-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">colnames</span>(mat) <span class="ot">&lt;-</span> mat[<span class="dv">1</span>, ]</span>
+<span id="cb27-10"><a href="#cb27-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># Variables used as filters are repeated at the end; keep the first copy</span></span>
+<span id="cb27-11"><a href="#cb27-11" aria-hidden="true" tabindex="-1"></a>  mat <span class="ot">&lt;-</span> mat[<span class="sc">-</span><span class="dv">1</span>, <span class="sc">!</span><span class="fu">duplicated</span>(<span class="fu">colnames</span>(mat)), drop <span class="ot">=</span> <span class="cn">FALSE</span>]</span>
+<span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>(mat)</span>
+<span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The second helper works on the object <code>GET()</code> returns. It checks the HTTP status and stops with the API’s own message when something is wrong. For example, a misspelled variable name produces a status <code>400</code> with a short explanation, and a query that matches no records produces a <code>204</code>. Otherwise it passes the text to the first helper.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Convert the object returned by GET() into a tibble.</span></span>
+<span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>pums_response_to_tibble <span class="ot">&lt;-</span> <span class="cf">function</span>(resp) {</span>
+<span id="cb28-3"><a href="#cb28-3" aria-hidden="true" tabindex="-1"></a>  reply <span class="ot">&lt;-</span> <span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>)</span>
+<span id="cb28-4"><a href="#cb28-4" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">status_code</span>(resp) <span class="sc">==</span> <span class="dv">204</span>) {</span>
+<span id="cb28-5"><a href="#cb28-5" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"The query matched no records."</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb28-6"><a href="#cb28-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb28-7"><a href="#cb28-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">status_code</span>(resp) <span class="sc">!=</span> <span class="dv">200</span>) {</span>
+<span id="cb28-8"><a href="#cb28-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Census API request failed (status "</span>, <span class="fu">status_code</span>(resp), <span class="st">"): "</span>,</span>
+<span id="cb28-9"><a href="#cb28-9" aria-hidden="true" tabindex="-1"></a>         reply, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb28-10"><a href="#cb28-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb28-11"><a href="#cb28-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parse_census_json</span>(reply)</span>
+<span id="cb28-12"><a href="#cb28-12" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Applying it to the response from above gives a tibble with one row per person.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb29"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb29-1"><a href="#cb29-1" aria-hidden="true" tabindex="-1"></a>census_raw <span class="ot">&lt;-</span> <span class="fu">pums_response_to_tibble</span>(resp)</span>
+<span id="cb29-2"><a href="#cb29-2" aria-hidden="true" tabindex="-1"></a>census_raw</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 58 × 7
+   SEX   PWGTP AGEP  JWAP  JWMNP SCHL  state
+   &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
+ 1 1     76    30    88    45    22    37   
+ 2 1     77    30    94    45    20    37   
+ 3 1     279   30    103   45    21    37   
+ 4 1     50    30    85    45    17    37   
+ 5 1     12    30    79    45    16    37   
+ 6 1     64    30    79    45    22    37   
+ 7 2     93    30    76    45    21    37   
+ 8 2     204   30    235   45    21    37   
+ 9 2     7     30    79    45    16    37   
+10 1     118   30    91    45    18    37   
+# ℹ 48 more rows</code></pre>
+</div>
+</div>
+<p>The repeated <code>AGEP</code> and <code>JWMNP</code> columns are gone, <code>state</code> is kept, and every column is consistently a character vector.</p>
 
 
 </section>
