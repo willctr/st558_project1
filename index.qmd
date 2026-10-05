@@ -216,8 +216,8 @@ the column names and drops any repeated column. First it checks if the return is
 ```{r}
 #| label: parse-census-json
  
-# Turn the text of a Census API reply into a tibble of character columns.
-# The reply is an array of arrays: row 1 is the header, the rest is data.
+# turn the text of a Census API reply into a tibble of character columns.
+# the result is an array of arrays: row 1 is the header, the rest is data.
 parse_census_json <- function(json_text) {
   if (!validate(json_text)) {
     stop("The Census API did not return JSON. The reply began: ",
@@ -240,7 +240,7 @@ it passes the text to the first helper.
 ```{r}
 #| label: response-to-tibble
  
-# Convert the object returned by GET() into a tibble.
+# convert the object returned by GET() into a tibble
 pums_response_to_tibble <- function(resp) {
   reply <- content(resp, as = "text", encoding = "UTF-8")
   if (status_code(resp) == 204) {
@@ -264,5 +264,89 @@ census_raw <- pums_response_to_tibble(resp)
 census_raw
 ```
  
-The repeated `AGEP` and `JWMNP` columns are gone, `state` is kept, and every
+The repeated `AGEP` and `JWMNP` columns are dropped, `state` is kept, and every
 column is consistently a character vector.
+
+
+
+
+
+
+## Converting variable types
+ 
+The tibble from the last section is all text. Numeric variables need to be
+numbers and categorical variables need to be factors with labels. Both helpers use the lists saved earlier in `pums_vars`, so the labels always match
+the survey year.
+
+Some numeric codes mean "not applicable". For `JWMNP` (travel time to work), `0` means the person is not a worker or worked from home, and in 2023 `888` means the value was suppressed. `GASP` and `GRPIP` have similar codes. If they remained as numbers, they would skew every mean, so they become `NA`. The helper finds them from the labels (a label starting with "N/A" or "Suppressed"). A real zero is kept: for `AGEP`, `0` means under 1 year old. Codes have to be compared as numbers. The API sends `1` where the variables file has `01`, and the 2021 file uses `00` for an age of 0. Matching as text would miss these, so both sides are converted to numbers first.
+ 
+For categorical variables the N/A code is kept as its own level.
+ 
+```{r}
+#| label: type-helpers
+ 
+# codes that mean "not applicable" or "suppressed" for one variable. they are
+# found from the labels, so the rule works for every year's file
+na_codes_for <- function(var_info) {
+  items <- var_info$items
+  if (length(items) == 0) return(character(0))
+  names(items)[grepl("^(N/A|Suppressed)", items)]
+}
+ 
+# character codes -> numbers, with the variable's N/A codes set to NA
+convert_numeric <- function(x, var_info) {
+  values <- as.numeric(x)
+  values[values %in% as.numeric(na_codes_for(var_info))] <- NA
+  values
+}
+ 
+# character codes -> factor whose levels are the variable's labels, in code
+# order. codes are matched as numbers. unknown codes trigger a warning
+convert_factor <- function(x, var_info) {
+  codes   <- as.numeric(x)
+  items   <- var_info$items
+  known   <- as.numeric(names(items))
+  unknown <- setdiff(unique(codes[!is.na(codes)]), known)
+  if (length(unknown) > 0) {
+    warning("Codes not found in the variable list: ",
+            paste(unknown, collapse = ", "), call. = FALSE)
+  }
+  factor(codes, levels = known, labels = unname(items))
+}
+```
+ 
+A few direct calls show the behavior. The first turns the N/A and suppressed
+codes into `NA`, the second keeps a real zero, and the third shows that the
+API's `1` finds the file's `01`.
+ 
+```{r}
+#| label: example-conversions
+ 
+convert_numeric(c("12", "0", "888"), pums_vars[["2023"]]$JWMNP)
+convert_numeric(c("0", "5"), pums_vars[["2024"]]$AGEP)
+as.character(convert_factor(c("1", "16", "22"), pums_vars[["2024"]]$SCHL))
+```
+ 
+Applying the helpers to the tibble converts the weight, age, and travel time to numbers and `SEX` and `SCHL` to factors.
+ 
+```{r}
+#| label: example-typed
+ 
+lists_2024 <- pums_vars[["2024"]]
+ 
+census_typed <- census_raw |>
+  mutate(
+    PWGTP = convert_numeric(PWGTP, lists_2024$PWGTP),
+    AGEP  = convert_numeric(AGEP,  lists_2024$AGEP),
+    JWMNP = convert_numeric(JWMNP, lists_2024$JWMNP),
+    SEX   = convert_factor(SEX,  lists_2024$SEX),
+    SCHL  = convert_factor(SCHL, lists_2024$SCHL)
+  )
+ 
+census_typed
+levels(census_typed$SEX)
+```
+ 
+`PWGTP`, `AGEP`, and `JWMNP` are now numeric (`<dbl>`), and `SEX` is a factor
+with the levels Male and Female. `JWAP`. The arrival time at work is still
+text and will use a helper to convert to datetime.
