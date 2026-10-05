@@ -106,6 +106,35 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
   }
 }</script>
 
+  <script src="https://cdnjs.cloudflare.com/polyfill/v3/polyfill.min.js?features=es6"></script>
+  <script defer="" src="https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-chtml-full.js" type="text/javascript"></script>
+
+<script type="text/javascript">
+const typesetMath = (el) => {
+  if (window.MathJax) {
+    // MathJax Typeset
+    window.MathJax.typeset([el]);
+  } else if (window.katex) {
+    // KaTeX Render
+    var mathElements = el.getElementsByClassName("math");
+    var macros = [];
+    for (var i = 0; i < mathElements.length; i++) {
+      var texText = mathElements[i].firstChild;
+      if (mathElements[i].tagName == "SPAN" && texText && texText.data) {
+        window.katex.render(texText.data, mathElements[i], {
+          displayMode: mathElements[i].classList.contains('display'),
+          throwOnError: false,
+          macros: macros,
+          fleqn: false
+        });
+      }
+    }
+  }
+}
+window.Quarto = {
+  typesetMath
+};
+</script>
 
 </head>
 
@@ -329,11 +358,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>), <span class="dv">1</span>, <span class="dv">300</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[["SEX","PWGTP","AGEP","JWAP","JWMNP","SCHL","AGEP","JWMNP","state"],
-["1","76","30","88","45","22","30","45","37"],
-["1","77","30","94","45","20","30","45","37"],
-["1","279","30","103","45","21","30","45","37"],
-["1","50","30","85","45","17","30","45","37"],
-["1","12","30","79","45","16","30","45",</code></pre>
+["1","60","30","98","45","20","30","45","37"],
+["1","42","30","91","45","18","30","45","37"],
+["2","51","30","91","45","23","30","45","37"],
+["2","45","30","89","45","18","30","45","37"],
+["2","88","30","103","45","19","30","45","</code></pre>
 </div>
 </div>
 <p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
@@ -376,16 +405,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 58 × 7
    SEX   PWGTP AGEP  JWAP  JWMNP SCHL  state
    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
- 1 1     76    30    88    45    22    37   
- 2 1     77    30    94    45    20    37   
- 3 1     279   30    103   45    21    37   
- 4 1     50    30    85    45    17    37   
- 5 1     12    30    79    45    16    37   
- 6 1     64    30    79    45    22    37   
- 7 2     93    30    76    45    21    37   
- 8 2     204   30    235   45    21    37   
- 9 2     7     30    79    45    16    37   
-10 1     118   30    91    45    18    37   
+ 1 1     60    30    98    45    20    37   
+ 2 1     42    30    91    45    18    37   
+ 3 2     51    30    91    45    23    37   
+ 4 2     45    30    89    45    18    37   
+ 5 2     88    30    103   45    19    37   
+ 6 1     80    30    97    45    21    37   
+ 7 1     87    30    79    45    16    37   
+ 8 2     160   30    214   45    18    37   
+ 9 1     96    30    73    45    21    37   
+10 1     41    30    103   45    21    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -458,18 +487,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>census_typed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                               state
-   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                              &lt;chr&gt;
- 1 Male      76    30 88       45 Master's degree                    37   
- 2 Male      77    30 94       45 Associate's degree                 37   
- 3 Male     279    30 103      45 Bachelor's degree                  37   
- 4 Male      50    30 85       45 GED or alternative credential      37   
- 5 Male      12    30 79       45 Regular high school diploma        37   
- 6 Male      64    30 79       45 Master's degree                    37   
- 7 Female    93    30 76       45 Bachelor's degree                  37   
- 8 Female   204    30 235      45 Bachelor's degree                  37   
- 9 Female     7    30 79       45 Regular high school diploma        37   
-10 Male     118    30 91       45 Some college, but less than 1 year 37   
+   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                                     state
+   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                    &lt;chr&gt;
+ 1 Male      60    30 98       45 Associate's degree                       37   
+ 2 Male      42    30 91       45 Some college, but less than 1 year       37   
+ 3 Female    51    30 91       45 Professional degree beyond a bachelor's… 37   
+ 4 Female    45    30 89       45 Some college, but less than 1 year       37   
+ 5 Female    88    30 103      45 1 or more years of college credit, no d… 37   
+ 6 Male      80    30 97       45 Bachelor's degree                        37   
+ 7 Male      87    30 79       45 Regular high school diploma              37   
+ 8 Female   160    30 214      45 Some college, but less than 1 year       37   
+ 9 Male      96    30 73       45 Bachelor's degree                        37   
+10 Male      41    30 103      45 Bachelor's degree                        37   
 # ℹ 48 more rows</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(census_typed<span class="sc">$</span>SEX)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -537,18 +566,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>census_timed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX    PWGTP  AGEP JWAP       JWMNP SCHL                               state
-   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;   &lt;dbl&gt; &lt;fct&gt;                              &lt;chr&gt;
- 1 Male      76    30 7H 32M 0S     45 Master's degree                    37   
- 2 Male      77    30 8H 2M 0S      45 Associate's degree                 37   
- 3 Male     279    30 8H 47M 0S     45 Bachelor's degree                  37   
- 4 Male      50    30 7H 17M 0S     45 GED or alternative credential      37   
- 5 Male      12    30 6H 47M 0S     45 Regular high school diploma        37   
- 6 Male      64    30 6H 47M 0S     45 Master's degree                    37   
- 7 Female    93    30 6H 32M 0S     45 Bachelor's degree                  37   
- 8 Female   204    30 19H 47M 0S    45 Bachelor's degree                  37   
- 9 Female     7    30 6H 47M 0S     45 Regular high school diploma        37   
-10 Male     118    30 7H 47M 0S     45 Some college, but less than 1 year 37   
+   SEX    PWGTP  AGEP JWAP      JWMNP SCHL                                 state
+   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;  &lt;dbl&gt; &lt;fct&gt;                                &lt;chr&gt;
+ 1 Male      60    30 8H 22M 0S    45 Associate's degree                   37   
+ 2 Male      42    30 7H 47M 0S    45 Some college, but less than 1 year   37   
+ 3 Female    51    30 7H 47M 0S    45 Professional degree beyond a bachel… 37   
+ 4 Female    45    30 7H 37M 0S    45 Some college, but less than 1 year   37   
+ 5 Female    88    30 8H 47M 0S    45 1 or more years of college credit, … 37   
+ 6 Male      80    30 8H 17M 0S    45 Bachelor's degree                    37   
+ 7 Male      87    30 6H 47M 0S    45 Regular high school diploma          37   
+ 8 Female   160    30 18H 2M 0S    45 Some college, but less than 1 year   37   
+ 9 Male      96    30 6H 17M 0S    45 Bachelor's degree                    37   
+10 Male      41    30 8H 47M 0S    45 Bachelor's degree                    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -925,6 +954,455 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 </div>
 </div>
 <p>Each message names what was wrong and lists the allowed choices.</p>
+</section>
+</section>
+<section id="querying-several-years" class="level2">
+<h2 class="anchored" data-anchor-id="querying-several-years">Querying several years</h2>
+<p>The single-year function does the work for one survey year. The multi-year function calls it once for each requested year, adds a <code>year</code> column that records which survey each row came from, and stacks the results into one tibble. The variables, the geography, and the key are passed through to the single-year function with <code>...</code>, so those options and their defaults are defined in one place.</p>
+<p>The years are checked first before anything is downloaded. The <code>year</code> column is a factor. Stacking tibbles with <code>bind_rows()</code> can drop the custom <code>census</code> class, so the function makes sure it is still present before returning.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb111"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb111-1"><a href="#cb111-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check the years and return them sorted and without repeats</span></span>
+<span id="cb111-2"><a href="#cb111-2" aria-hidden="true" tabindex="-1"></a>check_years <span class="ot">&lt;-</span> <span class="cf">function</span>(years) {</span>
+<span id="cb111-3"><a href="#cb111-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(years) <span class="sc">==</span> <span class="dv">0</span> <span class="sc">||</span> <span class="fu">anyNA</span>(years) <span class="sc">||</span> <span class="sc">!</span><span class="fu">all</span>(years <span class="sc">%in%</span> <span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>)) {</span>
+<span id="cb111-4"><a href="#cb111-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"years must be one or more of: 2021, 2022, 2023, 2024"</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb111-5"><a href="#cb111-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb111-6"><a href="#cb111-6" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sort</span>(<span class="fu">unique</span>(<span class="fu">as.integer</span>(years)))</span>
+<span id="cb111-7"><a href="#cb111-7" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb111-8"><a href="#cb111-8" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb111-9"><a href="#cb111-9" aria-hidden="true" tabindex="-1"></a><span class="co"># query several survey years and stack them into one census tibble.</span></span>
+<span id="cb111-10"><a href="#cb111-10" aria-hidden="true" tabindex="-1"></a><span class="co"># ... holds the other options and is passed on to get_pums_year().</span></span>
+<span id="cb111-11"><a href="#cb111-11" aria-hidden="true" tabindex="-1"></a>get_pums_years <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">years =</span> <span class="dv">2024</span>, ...) {</span>
+<span id="cb111-12"><a href="#cb111-12" aria-hidden="true" tabindex="-1"></a>  years   <span class="ot">&lt;-</span> <span class="fu">check_years</span>(years)</span>
+<span id="cb111-13"><a href="#cb111-13" aria-hidden="true" tabindex="-1"></a>  results <span class="ot">&lt;-</span> <span class="fu">lapply</span>(years, <span class="cf">function</span>(y) <span class="fu">get_pums_year</span>(<span class="at">year =</span> y, ...))</span>
+<span id="cb111-14"><a href="#cb111-14" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(results) <span class="ot">&lt;-</span> years</span>
+<span id="cb111-15"><a href="#cb111-15" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb111-16"><a href="#cb111-16" aria-hidden="true" tabindex="-1"></a>  data      <span class="ot">&lt;-</span> <span class="fu">bind_rows</span>(results, <span class="at">.id =</span> <span class="st">"year"</span>)</span>
+<span id="cb111-17"><a href="#cb111-17" aria-hidden="true" tabindex="-1"></a>  data<span class="sc">$</span>year <span class="ot">&lt;-</span> <span class="fu">factor</span>(data<span class="sc">$</span>year, <span class="at">levels =</span> years)</span>
+<span id="cb111-18"><a href="#cb111-18" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb111-19"><a href="#cb111-19" aria-hidden="true" tabindex="-1"></a>  <span class="co"># bind_rows() can drop the custom class, so make sure it is still there</span></span>
+<span id="cb111-20"><a href="#cb111-20" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">inherits</span>(data, <span class="st">"census"</span>)) <span class="fu">class</span>(data) <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"census"</span>, <span class="fu">class</span>(data))</span>
+<span id="cb111-21"><a href="#cb111-21" aria-hidden="true" tabindex="-1"></a>  data</span>
+<span id="cb111-22"><a href="#cb111-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>This call asks for all four years for Wyoming, with the weight and travel time as the numeric variables and sex and education as the categorical variables.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>wyoming_all_years <span class="ot">&lt;-</span> <span class="fu">get_pums_years</span>(</span>
+<span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">years =</span> <span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>,</span>
+<span id="cb112-3"><a href="#cb112-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">numeric_vars =</span> <span class="fu">c</span>(<span class="st">"PWGTP"</span>, <span class="st">"JWMNP"</span>),</span>
+<span id="cb112-4"><a href="#cb112-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">cat_vars =</span> <span class="fu">c</span>(<span class="st">"SEX"</span>, <span class="st">"SCHL"</span>),</span>
+<span id="cb112-5"><a href="#cb112-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">geography_value =</span> <span class="st">"Wyoming/WY"</span></span>
+<span id="cb112-6"><a href="#cb112-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb112-7"><a href="#cb112-7" aria-hidden="true" tabindex="-1"></a>wyoming_all_years</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 24,046 × 6
+   year  PWGTP JWMNP SEX    SCHL                                         state  
+   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;  &lt;fct&gt;                                        &lt;fct&gt;  
+ 1 2021     39    NA Female Grade 11                                     Wyomin…
+ 2 2021     45     5 Male   Regular high school diploma                  Wyomin…
+ 3 2021    218    NA Female Bachelor's degree                            Wyomin…
+ 4 2021     10    NA Female GED or alternative credential                Wyomin…
+ 5 2021     12    10 Male   Regular high school diploma                  Wyomin…
+ 6 2021    108    NA Female 1 or more years of college credit, no degree Wyomin…
+ 7 2021     91    NA Male   Regular high school diploma                  Wyomin…
+ 8 2021     71    NA Female GED or alternative credential                Wyomin…
+ 9 2021      8     5 Male   Regular high school diploma                  Wyomin…
+10 2021    122    NA Male   Grade 1                                      Wyomin…
+# ℹ 24,036 more rows</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb114"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb114-1"><a href="#cb114-1" aria-hidden="true" tabindex="-1"></a><span class="fu">table</span>(wyoming_all_years<span class="sc">$</span>year)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>
+2021 2022 2023 2024 
+5861 5962 6024 6199 </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb116"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb116-1"><a href="#cb116-1" aria-hidden="true" tabindex="-1"></a><span class="fu">inherits</span>(wyoming_all_years, <span class="st">"census"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<p>The <code>year</code> column comes first and the other columns keep their types from the single-year function. The table shows how many records each survey year contributed, and the object still has the <code>census</code> class. Years can be given in any order and with repeats. They come back sorted, one copy each.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(<span class="fu">get_pums_years</span>(<span class="at">years =</span> <span class="fu">c</span>(<span class="dv">2024</span>, <span class="dv">2022</span>, <span class="dv">2024</span>),</span>
+<span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">geography_value =</span> <span class="st">"Wyoming/WY"</span>)<span class="sc">$</span>year)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "2022" "2024"</code></pre>
+</div>
+</div>
+<section id="calls-that-should-fail-1" class="level3">
+<h3 class="anchored" data-anchor-id="calls-that-should-fail-1">Calls that should fail</h3>
+<p>The year check runs before any download, and the other options are validated by the single-year function before it makes its first request.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb120"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb120-1"><a href="#cb120-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_years</span>(<span class="at">years =</span> <span class="dv">2020</span>)  <span class="co"># year out of range</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! years must be one or more of: 2021, 2022, 2023, 2024</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb122"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb122-1"><a href="#cb122-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_years</span>(<span class="at">years =</span> <span class="fu">c</span>(<span class="dv">2023</span>, <span class="dv">2025</span>))  <span class="co"># one good year and one bad year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! years must be one or more of: 2021, 2022, 2023, 2024</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb124"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb124-1"><a href="#cb124-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_years</span>(<span class="at">years =</span> <span class="fu">integer</span>(<span class="dv">0</span>))  <span class="co"># no years</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! years must be one or more of: 2021, 2022, 2023, 2024</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb126"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb126-1"><a href="#cb126-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_years</span>(<span class="at">years =</span> <span class="fu">c</span>(<span class="dv">2022</span>, <span class="dv">2023</span>), <span class="at">numeric_vars =</span> <span class="st">"PWGTP"</span>)  <span class="co"># nothing besides PWGTP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars must include at least one variable besides PWGTP. Choose from: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP.</code></pre>
+</div>
+</div>
+</section>
+</section>
+</section>
+<section id="part-2-generic-functions" class="level1">
+<h1>Part 2: Generic Functions</h1>
+<p>The records in our tibbles do not correspond to just one person. The <code>PWGTP</code> variable is the number of people a row represents, so every summary and plot has to weight by it. Repeating each row <code>PWGTP</code> times would give an ordinary data set, but it would make some tibbles huge, so the functions below use the weights directly.</p>
+<p>A generic function such as <code>summary()</code> or <code>plot()</code> looks at the class of its first argument and calls the method written for that class. The query functions return tibbles with the class <code>census</code>, so a function named <code>summary.census()</code> is what <code>summary()</code> runs on them.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb128"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb128-1"><a href="#cb128-1" aria-hidden="true" tabindex="-1"></a><span class="fu">class</span>(nc_2024)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "census"     "tbl_df"     "tbl"        "data.frame"</code></pre>
+</div>
+</div>
+<section id="summarizing-a-census-tibble" class="level2">
+<h2 class="anchored" data-anchor-id="summarizing-a-census-tibble">Summarizing a census tibble</h2>
+<p>The summary method reports a mean and a standard deviation for each numeric variable and counts for each categorical variable. By default it uses every numeric variable except <code>PWGTP</code> and every factor in the tibble, including <code>year</code> and the geography column. The user can instead name the variables to summarize. The time variables are left out.</p>
+<p>The mean and standard deviation use the weighted formulas from the assignment document, where <span class="math inline">\(x_i\)</span> is a value and <span class="math inline">\(w_i\)</span> is its weight (<code>PWGTP</code>):</p>
+<p><span class="math display">\[\bar{x} = \frac{\sum x_i w_i}{\sum w_i}, \qquad s = \sqrt{\frac{\sum x_i^2 w_i}{\sum w_i} - \bar{x}^2}\]</span></p>
+<p>Some people do not have a value for a variable, such as travel time for someone who does not work. Those rows are left out of that variable’s mean and standard deviation along with their weights, so the result describe people who have a valid value. Counts are also weighted. The count for a level is the sum of the weights in that level, which estimates the number of people. The number of sample records at each level is returned as well.</p>
+<p>The first helpers do the arithmetic.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="co"># weighted mean of x with weights w. missing values are left out with their weights.</span></span>
+<span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>weighted_mean <span class="ot">&lt;-</span> <span class="cf">function</span>(x, w) {</span>
+<span id="cb130-3"><a href="#cb130-3" aria-hidden="true" tabindex="-1"></a>  keep <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(x)</span>
+<span id="cb130-4"><a href="#cb130-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sum</span>(x[keep] <span class="sc">*</span> w[keep]) <span class="sc">/</span> <span class="fu">sum</span>(w[keep])</span>
+<span id="cb130-5"><a href="#cb130-5" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb130-6"><a href="#cb130-6" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb130-7"><a href="#cb130-7" aria-hidden="true" tabindex="-1"></a><span class="co"># weighted standard deviation from the project's formula. rounding can push</span></span>
+<span id="cb130-8"><a href="#cb130-8" aria-hidden="true" tabindex="-1"></a><span class="co"># the variance slightly below zero when every value is the same, so it is</span></span>
+<span id="cb130-9"><a href="#cb130-9" aria-hidden="true" tabindex="-1"></a><span class="co"># held at zero.</span></span>
+<span id="cb130-10"><a href="#cb130-10" aria-hidden="true" tabindex="-1"></a>weighted_sd <span class="ot">&lt;-</span> <span class="cf">function</span>(x, w) {</span>
+<span id="cb130-11"><a href="#cb130-11" aria-hidden="true" tabindex="-1"></a>  keep     <span class="ot">&lt;-</span> <span class="sc">!</span><span class="fu">is.na</span>(x)</span>
+<span id="cb130-12"><a href="#cb130-12" aria-hidden="true" tabindex="-1"></a>  variance <span class="ot">&lt;-</span> <span class="fu">sum</span>(x[keep]<span class="sc">^</span><span class="dv">2</span> <span class="sc">*</span> w[keep]) <span class="sc">/</span> <span class="fu">sum</span>(w[keep]) <span class="sc">-</span> <span class="fu">weighted_mean</span>(x, w)<span class="sc">^</span><span class="dv">2</span></span>
+<span id="cb130-13"><a href="#cb130-13" aria-hidden="true" tabindex="-1"></a>  <span class="fu">sqrt</span>(<span class="fu">max</span>(variance, <span class="dv">0</span>))</span>
+<span id="cb130-14"><a href="#cb130-14" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb130-15"><a href="#cb130-15" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb130-16"><a href="#cb130-16" aria-hidden="true" tabindex="-1"></a><span class="co"># estimated number of people at each level of a factor: the weights added up</span></span>
+<span id="cb130-17"><a href="#cb130-17" aria-hidden="true" tabindex="-1"></a><span class="co"># within each level. levels with no records count as 0.</span></span>
+<span id="cb130-18"><a href="#cb130-18" aria-hidden="true" tabindex="-1"></a>weighted_counts <span class="ot">&lt;-</span> <span class="cf">function</span>(x, w) {</span>
+<span id="cb130-19"><a href="#cb130-19" aria-hidden="true" tabindex="-1"></a>  totals <span class="ot">&lt;-</span> <span class="fu">tapply</span>(w, x, sum)</span>
+<span id="cb130-20"><a href="#cb130-20" aria-hidden="true" tabindex="-1"></a>  totals[<span class="fu">is.na</span>(totals)] <span class="ot">&lt;-</span> <span class="dv">0</span></span>
+<span id="cb130-21"><a href="#cb130-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(totals)</span>
+<span id="cb130-22"><a href="#cb130-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The summary method decides which variables can be summarized, checks the user’s choices with the same <code>check_choices()</code> helper used earlier, and returns a named list. Its first argument is called <code>object</code> so that it matches the <code>summary()</code> generic.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co"># summary method for census tibbles. returns a named list:</span></span>
+<span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   means, sds - weighted mean and standard deviation of each numeric variable</span></span>
+<span id="cb131-3"><a href="#cb131-3" aria-hidden="true" tabindex="-1"></a><span class="co">#   counts     - estimated number of people at each level of each factor</span></span>
+<span id="cb131-4"><a href="#cb131-4" aria-hidden="true" tabindex="-1"></a><span class="co">#   records    - number of sample records at each level of each factor</span></span>
+<span id="cb131-5"><a href="#cb131-5" aria-hidden="true" tabindex="-1"></a>summary.census <span class="ot">&lt;-</span> <span class="cf">function</span>(object, <span class="at">numeric_vars =</span> <span class="cn">NULL</span>, <span class="at">cat_vars =</span> <span class="cn">NULL</span>) {</span>
+<span id="cb131-6"><a href="#cb131-6" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="st">"PWGTP"</span> <span class="sc">%in%</span> <span class="fu">names</span>(object)) {</span>
+<span id="cb131-7"><a href="#cb131-7" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"the data needs a PWGTP column to use as weights."</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb131-8"><a href="#cb131-8" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb131-9"><a href="#cb131-9" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb131-10"><a href="#cb131-10" aria-hidden="true" tabindex="-1"></a>  <span class="co"># what can be summarized: numeric columns other than the weight (times are</span></span>
+<span id="cb131-11"><a href="#cb131-11" aria-hidden="true" tabindex="-1"></a>  <span class="co"># left out) and factor columns</span></span>
+<span id="cb131-12"><a href="#cb131-12" aria-hidden="true" tabindex="-1"></a>  is_number <span class="ot">&lt;-</span> <span class="fu">vapply</span>(object, <span class="cf">function</span>(col) <span class="fu">is.numeric</span>(col) <span class="sc">&amp;&amp;</span> <span class="sc">!</span><span class="fu">is.period</span>(col),</span>
+<span id="cb131-13"><a href="#cb131-13" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">logical</span>(<span class="dv">1</span>))</span>
+<span id="cb131-14"><a href="#cb131-14" aria-hidden="true" tabindex="-1"></a>  is_factor <span class="ot">&lt;-</span> <span class="fu">vapply</span>(object, is.factor, <span class="fu">logical</span>(<span class="dv">1</span>))</span>
+<span id="cb131-15"><a href="#cb131-15" aria-hidden="true" tabindex="-1"></a>  numeric_options <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(object)[is_number], <span class="st">"PWGTP"</span>)</span>
+<span id="cb131-16"><a href="#cb131-16" aria-hidden="true" tabindex="-1"></a>  cat_options     <span class="ot">&lt;-</span> <span class="fu">names</span>(object)[is_factor]</span>
+<span id="cb131-17"><a href="#cb131-17" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb131-18"><a href="#cb131-18" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(numeric_vars)) {</span>
+<span id="cb131-19"><a href="#cb131-19" aria-hidden="true" tabindex="-1"></a>    numeric_vars <span class="ot">&lt;-</span> numeric_options</span>
+<span id="cb131-20"><a href="#cb131-20" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb131-21"><a href="#cb131-21" aria-hidden="true" tabindex="-1"></a>    <span class="fu">check_choices</span>(numeric_vars, numeric_options, <span class="st">"numeric_vars"</span>)</span>
+<span id="cb131-22"><a href="#cb131-22" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb131-23"><a href="#cb131-23" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(cat_vars)) {</span>
+<span id="cb131-24"><a href="#cb131-24" aria-hidden="true" tabindex="-1"></a>    cat_vars <span class="ot">&lt;-</span> cat_options</span>
+<span id="cb131-25"><a href="#cb131-25" aria-hidden="true" tabindex="-1"></a>  } <span class="cf">else</span> {</span>
+<span id="cb131-26"><a href="#cb131-26" aria-hidden="true" tabindex="-1"></a>    <span class="fu">check_choices</span>(cat_vars, cat_options, <span class="st">"cat_vars"</span>)</span>
+<span id="cb131-27"><a href="#cb131-27" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb131-28"><a href="#cb131-28" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb131-29"><a href="#cb131-29" aria-hidden="true" tabindex="-1"></a>  weights <span class="ot">&lt;-</span> object<span class="sc">$</span>PWGTP</span>
+<span id="cb131-30"><a href="#cb131-30" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(</span>
+<span id="cb131-31"><a href="#cb131-31" aria-hidden="true" tabindex="-1"></a>    <span class="at">means =</span> <span class="fu">vapply</span>(numeric_vars, <span class="cf">function</span>(v) <span class="fu">weighted_mean</span>(object[[v]], weights),</span>
+<span id="cb131-32"><a href="#cb131-32" aria-hidden="true" tabindex="-1"></a>                   <span class="fu">numeric</span>(<span class="dv">1</span>)),</span>
+<span id="cb131-33"><a href="#cb131-33" aria-hidden="true" tabindex="-1"></a>    <span class="at">sds   =</span> <span class="fu">vapply</span>(numeric_vars, <span class="cf">function</span>(v) <span class="fu">weighted_sd</span>(object[[v]], weights),</span>
+<span id="cb131-34"><a href="#cb131-34" aria-hidden="true" tabindex="-1"></a>                   <span class="fu">numeric</span>(<span class="dv">1</span>)),</span>
+<span id="cb131-35"><a href="#cb131-35" aria-hidden="true" tabindex="-1"></a>    <span class="at">counts  =</span> <span class="fu">sapply</span>(cat_vars, <span class="cf">function</span>(v) <span class="fu">weighted_counts</span>(object[[v]], weights),</span>
+<span id="cb131-36"><a href="#cb131-36" aria-hidden="true" tabindex="-1"></a>                     <span class="at">simplify =</span> <span class="cn">FALSE</span>),</span>
+<span id="cb131-37"><a href="#cb131-37" aria-hidden="true" tabindex="-1"></a>    <span class="at">records =</span> <span class="fu">sapply</span>(cat_vars, <span class="cf">function</span>(v) <span class="fu">c</span>(<span class="fu">table</span>(object[[v]])),</span>
+<span id="cb131-38"><a href="#cb131-38" aria-hidden="true" tabindex="-1"></a>                     <span class="at">simplify =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb131-39"><a href="#cb131-39" aria-hidden="true" tabindex="-1"></a>  )</span>
+<span id="cb131-40"><a href="#cb131-40" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Calling <code>summary()</code> on the North Carolina data with no other arguments summarizes <code>AGEP</code> and the two factors, <code>SEX</code> and the geography column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb132"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb132-1"><a href="#cb132-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(nc_2024)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$means
+    AGEP 
+39.80583 
+
+$sds
+    AGEP 
+23.28099 
+
+$counts
+$counts$SEX
+   Male  Female 
+5391320 5654704 
+
+$counts$state
+North Carolina/NC 
+         11046024 
+
+
+$records
+$records$SEX
+  Male Female 
+ 55382  58888 
+
+$records$state
+North Carolina/NC 
+           114270 </code></pre>
+</div>
+</div>
+<p>The multi-year Wyoming data has travel time as its numeric variable, and <code>year</code> is one of the factors, so the counts are split by survey year.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb134"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb134-1"><a href="#cb134-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$means
+  JWMNP 
+19.0153 
+
+$sds
+   JWMNP 
+24.74241 
+
+$counts
+$counts$year
+  2021   2022   2023   2024 
+578803 581381 584057 587618 
+
+$counts$SEX
+   Male  Female 
+1193008 1138851 
+
+$counts$SCHL
+                   N/A (less than 3 years old) 
+                                         73253 
+                        No schooling completed 
+                                         61599 
+                     Nursery school, preschool 
+                                         36893 
+                                  Kindergarten 
+                                         27686 
+                                       Grade 1 
+                                         23470 
+                                       Grade 2 
+                                         30814 
+                                       Grade 3 
+                                         30049 
+                                       Grade 4 
+                                         29497 
+                                       Grade 5 
+                                         35293 
+                                       Grade 6 
+                                         32808 
+                                       Grade 7 
+                                         39956 
+                                       Grade 8 
+                                         43390 
+                                       Grade 9 
+                                         46543 
+                                      Grade 10 
+                                         46694 
+                                      Grade 11 
+                                         58538 
+                       12th grade - no diploma 
+                                         26289 
+                   Regular high school diploma 
+                                        417693 
+                 GED or alternative credential 
+                                         98710 
+            Some college, but less than 1 year 
+                                        160923 
+  1 or more years of college credit, no degree 
+                                        302709 
+                            Associate's degree 
+                                        200972 
+                             Bachelor's degree 
+                                        323468 
+                               Master's degree 
+                                        132749 
+Professional degree beyond a bachelor's degree 
+                                         26284 
+                              Doctorate degree 
+                                         25579 
+
+$counts$state
+Wyoming/WY 
+   2331859 
+
+
+$records
+$records$year
+2021 2022 2023 2024 
+5861 5962 6024 6199 
+
+$records$SEX
+  Male Female 
+ 12049  11997 
+
+$records$SCHL
+                   N/A (less than 3 years old) 
+                                           726 
+                        No schooling completed 
+                                           594 
+                     Nursery school, preschool 
+                                           347 
+                                  Kindergarten 
+                                           265 
+                                       Grade 1 
+                                           241 
+                                       Grade 2 
+                                           290 
+                                       Grade 3 
+                                           311 
+                                       Grade 4 
+                                           285 
+                                       Grade 5 
+                                           331 
+                                       Grade 6 
+                                           332 
+                                       Grade 7 
+                                           359 
+                                       Grade 8 
+                                           467 
+                                       Grade 9 
+                                           464 
+                                      Grade 10 
+                                           502 
+                                      Grade 11 
+                                           557 
+                       12th grade - no diploma 
+                                           277 
+                   Regular high school diploma 
+                                          4489 
+                 GED or alternative credential 
+                                          1045 
+            Some college, but less than 1 year 
+                                          1767 
+  1 or more years of college credit, no degree 
+                                          3074 
+                            Associate's degree 
+                                          2048 
+                             Bachelor's degree 
+                                          3308 
+                               Master's degree 
+                                          1421 
+Professional degree beyond a bachelor's degree 
+                                           295 
+                              Doctorate degree 
+                                           251 
+
+$records$state
+Wyoming/WY 
+     24046 </code></pre>
+</div>
+</div>
+<p>The user can pick the variables. This call summarizes only travel time and counts only <code>year</code> and <code>SEX</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb136"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb136-1"><a href="#cb136-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years, <span class="at">numeric_vars =</span> <span class="st">"JWMNP"</span>, <span class="at">cat_vars =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"SEX"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$means
+  JWMNP 
+19.0153 
+
+$sds
+   JWMNP 
+24.74241 
+
+$counts
+$counts$year
+  2021   2022   2023   2024 
+578803 581381 584057 587618 
+
+$counts$SEX
+   Male  Female 
+1193008 1138851 
+
+
+$records
+$records$year
+2021 2022 2023 2024 
+5861 5962 6024 6199 
+
+$records$SEX
+  Male Female 
+ 12049  11997 </code></pre>
+</div>
+</div>
+<p>The earlier Wyoming 2022 data also has arrival time, <code>JWAP</code>. It is a time, so the default summary skips it and reports only travel time.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb138"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb138-1"><a href="#cb138-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_2022)<span class="sc">$</span>means</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>   JWMNP 
+18.34648 </code></pre>
+</div>
+</div>
+<p>The weights change the answer. The first number below treats every record as one person. The second counts each record as the <code>PWGTP</code> people it stands for.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb140"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb140-1"><a href="#cb140-1" aria-hidden="true" tabindex="-1"></a><span class="fu">mean</span>(wyoming_all_years<span class="sc">$</span>JWMNP, <span class="at">na.rm =</span> <span class="cn">TRUE</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] 19.20793</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb142"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb142-1"><a href="#cb142-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years)<span class="sc">$</span>means[<span class="st">"JWMNP"</span>]</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>  JWMNP 
+19.0153 </code></pre>
+</div>
+</div>
+<section id="calls-that-should-fail-2" class="level3">
+<h3 class="anchored" data-anchor-id="calls-that-should-fail-2">Calls that should fail</h3>
+<p>Each call breaks a rule. Set to keep going after an error so every message is displayed.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb144"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years, <span class="at">numeric_vars =</span> <span class="st">"SEX"</span>)  <span class="co"># SEX is a factor</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars cannot include SEX. Choose from: JWMNP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb146"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb146-1"><a href="#cb146-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years, <span class="at">numeric_vars =</span> <span class="st">"PWGTP"</span>)  <span class="co"># the weight is not summarized</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars cannot include PWGTP. Choose from: JWMNP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb148"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb148-1"><a href="#cb148-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years, <span class="at">cat_vars =</span> <span class="st">"JWMNP"</span>)  <span class="co"># JWMNP is numeric</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! cat_vars cannot include JWMNP. Choose from: year, SEX, SCHL, state.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb150"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb150-1"><a href="#cb150-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years, <span class="at">numeric_vars =</span> <span class="st">"WAGP"</span>)  <span class="co"># not in the data</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars cannot include WAGP. Choose from: JWMNP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb152"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb152-1"><a href="#cb152-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_2022, <span class="at">numeric_vars =</span> <span class="st">"JWAP"</span>)  <span class="co"># times are left out</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars cannot include JWAP. Choose from: JWMNP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb154"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb154-1"><a href="#cb154-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary.census</span>(<span class="fu">select</span>(wyoming_all_years, <span class="sc">-</span>PWGTP))  <span class="co"># no weights to use</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! the data needs a PWGTP column to use as weights.</code></pre>
+</div>
+</div>
 
 
 </section>

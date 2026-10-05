@@ -724,3 +724,240 @@ get_pums_year(geography_value = "Puerto Rico")  # not covered by the project
 ```
  
 Each message names what was wrong and lists the allowed choices.
+
+
+
+## Querying several years
+ 
+The single-year function does the work for one survey year. The multi-year function calls it once for each requested year, adds a `year` column that records which survey each row came from, and stacks the results into one tibble. The variables, the geography, and the key are passed through to the single-year function with `...`, so those options and their defaults are defined in one place.
+ 
+The years are checked first before anything is downloaded. The `year` column is a factor. Stacking tibbles with `bind_rows()` can drop the custom `census` class, so the function makes sure it is still present before returning.
+ 
+```{r}
+#| label: get-pums-years
+ 
+# check the years and return them sorted and without repeats
+check_years <- function(years) {
+  if (length(years) == 0 || anyNA(years) || !all(years %in% 2021:2024)) {
+    stop("years must be one or more of: 2021, 2022, 2023, 2024", call. = FALSE)
+  }
+  sort(unique(as.integer(years)))
+}
+ 
+# query several survey years and stack them into one census tibble.
+# ... holds the other options and is passed on to get_pums_year().
+get_pums_years <- function(years = 2024, ...) {
+  years   <- check_years(years)
+  results <- lapply(years, function(y) get_pums_year(year = y, ...))
+  names(results) <- years
+ 
+  data      <- bind_rows(results, .id = "year")
+  data$year <- factor(data$year, levels = years)
+ 
+  # bind_rows() can drop the custom class, so make sure it is still there
+  if (!inherits(data, "census")) class(data) <- c("census", class(data))
+  data
+}
+```
+ 
+This call asks for all four years for Wyoming, with the weight and travel time as the numeric variables and sex and education as the categorical variables.
+ 
+```{r}
+#| label: example-multi-year
+ 
+wyoming_all_years <- get_pums_years(
+  years = 2021:2024,
+  numeric_vars = c("PWGTP", "JWMNP"),
+  cat_vars = c("SEX", "SCHL"),
+  geography_value = "Wyoming/WY"
+)
+wyoming_all_years
+table(wyoming_all_years$year)
+inherits(wyoming_all_years, "census")
+```
+ 
+The `year` column comes first and the other columns keep their types from the single-year function. The table shows how many records each survey year contributed, and the object still has the `census` class. Years can be given in any order and with repeats. They come back sorted, one copy each.
+ 
+```{r}
+#| label: example-year-order
+ 
+levels(get_pums_years(years = c(2024, 2022, 2024),
+                      geography_value = "Wyoming/WY")$year)
+```
+ 
+### Calls that should fail
+ 
+The year check runs before any download, and the other options are validated by the single-year function before it makes its first request.
+ 
+```{r}
+#| label: example-year-errors
+#| error: true
+ 
+get_pums_years(years = 2020)  # year out of range
+get_pums_years(years = c(2023, 2025))  # one good year and one bad year
+get_pums_years(years = integer(0))  # no years
+get_pums_years(years = c(2022, 2023), numeric_vars = "PWGTP")  # nothing besides PWGTP
+```
+
+
+
+
+# Part 2: Generic Functions
+ 
+The records in our tibbles do not correspond to just one person. The `PWGTP` variable is the number of people a row represents, so every summary and plot has to weight by it. Repeating each row `PWGTP` times would give an ordinary data set, but it would make some tibbles huge, so the functions below use the weights directly.
+ 
+A generic function such as `summary()` or `plot()` looks at the class of its first argument and calls the method written for that class. The query functions return tibbles with the class `census`, so a function named `summary.census()` is what `summary()` runs on them.
+ 
+```{r}
+#| label: example-class
+ 
+class(nc_2024)
+```
+ 
+## Summarizing a census tibble
+ 
+The summary method reports a mean and a standard deviation for each numeric variable and counts for each categorical variable. By default it uses every numeric variable except `PWGTP` and every factor in the tibble, including `year` and the geography column. The user can instead name the variables to summarize. The time variables are left out.
+ 
+The mean and standard deviation use the weighted formulas from the assignment document, where $x_i$ is a value and $w_i$ is its weight (`PWGTP`):
+ 
+$$\bar{x} = \frac{\sum x_i w_i}{\sum w_i}, \qquad s = \sqrt{\frac{\sum x_i^2 w_i}{\sum w_i} - \bar{x}^2}$$
+ 
+Some people do not have a value for a variable, such as travel time for someone who does not work. Those rows are left out of that variable's mean and standard deviation along with their weights, so the result describe people who have a valid value. Counts are also weighted. The count for a level is the sum of the weights in that level, which estimates the number of people. The number of sample records at each level is returned as well.
+ 
+The first helpers do the arithmetic.
+ 
+```{r}
+#| label: weighted-helpers
+ 
+# weighted mean of x with weights w. missing values are left out with their weights.
+weighted_mean <- function(x, w) {
+  keep <- !is.na(x)
+  sum(x[keep] * w[keep]) / sum(w[keep])
+}
+ 
+# weighted standard deviation from the project's formula. rounding can push
+# the variance slightly below zero when every value is the same, so it is
+# held at zero.
+weighted_sd <- function(x, w) {
+  keep     <- !is.na(x)
+  variance <- sum(x[keep]^2 * w[keep]) / sum(w[keep]) - weighted_mean(x, w)^2
+  sqrt(max(variance, 0))
+}
+ 
+# estimated number of people at each level of a factor: the weights added up
+# within each level. levels with no records count as 0.
+weighted_counts <- function(x, w) {
+  totals <- tapply(w, x, sum)
+  totals[is.na(totals)] <- 0
+  c(totals)
+}
+```
+ 
+The summary method decides which variables can be summarized, checks the user's choices with the same `check_choices()` helper used earlier, and returns a named list. Its first argument is called `object` so that it matches the `summary()` generic.
+ 
+```{r}
+#| label: summary-census
+ 
+# summary method for census tibbles. returns a named list:
+#   means, sds - weighted mean and standard deviation of each numeric variable
+#   counts     - estimated number of people at each level of each factor
+#   records    - number of sample records at each level of each factor
+summary.census <- function(object, numeric_vars = NULL, cat_vars = NULL) {
+  if (!"PWGTP" %in% names(object)) {
+    stop("the data needs a PWGTP column to use as weights.", call. = FALSE)
+  }
+ 
+  # what can be summarized: numeric columns other than the weight (times are
+  # left out) and factor columns
+  is_number <- vapply(object, function(col) is.numeric(col) && !is.period(col),
+                      logical(1))
+  is_factor <- vapply(object, is.factor, logical(1))
+  numeric_options <- setdiff(names(object)[is_number], "PWGTP")
+  cat_options     <- names(object)[is_factor]
+ 
+  if (is.null(numeric_vars)) {
+    numeric_vars <- numeric_options
+  } else {
+    check_choices(numeric_vars, numeric_options, "numeric_vars")
+  }
+  if (is.null(cat_vars)) {
+    cat_vars <- cat_options
+  } else {
+    check_choices(cat_vars, cat_options, "cat_vars")
+  }
+ 
+  weights <- object$PWGTP
+  list(
+    means = vapply(numeric_vars, function(v) weighted_mean(object[[v]], weights),
+                   numeric(1)),
+    sds   = vapply(numeric_vars, function(v) weighted_sd(object[[v]], weights),
+                   numeric(1)),
+    counts  = sapply(cat_vars, function(v) weighted_counts(object[[v]], weights),
+                     simplify = FALSE),
+    records = sapply(cat_vars, function(v) c(table(object[[v]])),
+                     simplify = FALSE)
+  )
+}
+```
+ 
+Calling `summary()` on the North Carolina data with no other arguments summarizes `AGEP` and the two factors, `SEX` and the geography column.
+ 
+```{r}
+#| label: example-summary-default
+ 
+summary(nc_2024)
+```
+ 
+The multi-year Wyoming data has travel time as its numeric variable, and `year` is one of the factors, so the counts are split by survey year.
+ 
+```{r}
+#| label: example-summary-years
+ 
+summary(wyoming_all_years)
+```
+ 
+The user can pick the variables. This call summarizes only travel time and counts only `year` and `SEX`.
+ 
+```{r}
+#| label: example-summary-chosen
+ 
+summary(wyoming_all_years, numeric_vars = "JWMNP", cat_vars = c("year", "SEX"))
+```
+ 
+The earlier Wyoming 2022 data also has arrival time, `JWAP`. It is a time, so the default summary skips it and reports only travel time.
+ 
+```{r}
+#| label: example-summary-time
+ 
+summary(wyoming_2022)$means
+```
+ 
+The weights change the answer. The first number below treats every record as one person. The second counts each record as the `PWGTP` people it stands for.
+ 
+```{r}
+#| label: example-weighted-vs-plain
+ 
+mean(wyoming_all_years$JWMNP, na.rm = TRUE)
+summary(wyoming_all_years)$means["JWMNP"]
+```
+ 
+### Calls that should fail
+ 
+Each call breaks a rule. Set to keep going after an error so every message is displayed.
+ 
+```{r}
+#| label: example-summary-errors
+#| error: true
+ 
+summary(wyoming_all_years, numeric_vars = "SEX")  # SEX is a factor
+summary(wyoming_all_years, numeric_vars = "PWGTP")  # the weight is not summarized
+summary(wyoming_all_years, cat_vars = "JWMNP")  # JWMNP is numeric
+summary(wyoming_all_years, numeric_vars = "WAGP")  # not in the data
+summary(wyoming_2022, numeric_vars = "JWAP")  # times are left out
+summary.census(select(wyoming_all_years, -PWGTP))  # no weights to use
+```
+
+
+
+
+
