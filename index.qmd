@@ -958,6 +958,107 @@ summary.census(select(wyoming_all_years, -PWGTP))  # no weights to use
 ```
 
 
+## Plotting a census tibble
+ 
+The plot method draws a boxplot of one numeric variable at each level of one categorical variable. The user has to name both, as column-name strings. The categorical variable can be any factor in the tibble, including `year`. The numeric variable can be any numeric column other than `PWGTP`, and the time variables are left out.
+ 
+The plot uses `weight = PWGTP` inside `aes()`, so each record counts as the number of people it represents and the boxes show the weighted quartiles. People with a missing value for the numeric variable are left out of the plot. Because the column names are strings, `.data[[cat_var]]` picks out the column by name inside `aes()`, which does the same job as `get(cat_var)`.
+ 
+The first helpers find which columns can be plotted and check that the user named exactly one of each kind.
+ 
+```{r}
+#| label: plot-helpers
+ 
+# the columns a census tibble can be plotted by: factors for the categories,
+# and numeric columns other than the weight (times are left out) for the values
+census_variables <- function(data) {
+  is_number <- vapply(data, function(col) is.numeric(col) && !is.period(col),
+                      logical(1))
+  is_factor <- vapply(data, is.factor, logical(1))
+  list(numeric     = setdiff(names(data)[is_number], "PWGTP"),
+       categorical = names(data)[is_factor])
+}
+ 
+# like check_choices(), but the user has to give exactly one variable
+check_one_choice <- function(value, allowed, arg_name) {
+  if (length(value) != 1) {
+    stop(arg_name, " must be a single variable name. Choose from: ",
+         paste(allowed, collapse = ", "), ".", call. = FALSE)
+  }
+  check_choices(value, allowed, arg_name)
+}
+```
+ 
+The plot method checks the inputs, then builds the plot. Its first argument is called `x` to match the `plot()` generic.
+ 
+```{r}
+#| label: plot-census
+ 
+# plot method for census tibbles: a weighted boxplot of num_var at each level of cat_var.
+plot.census <- function(x, cat_var, num_var) {
+  if (missing(cat_var) || missing(num_var)) {
+    stop("give one categorical variable (cat_var) and one numeric variable ",
+         "(num_var).", call. = FALSE)
+  }
+  if (!"PWGTP" %in% names(x)) {
+    stop("the data needs a PWGTP column to use as weights.", call. = FALSE)
+  }
+  options <- census_variables(x)
+  check_one_choice(cat_var, options$categorical, "cat_var")
+  check_one_choice(num_var, options$numeric, "num_var")
+  if (!requireNamespace("quantreg", quietly = TRUE)) {
+    stop("weighted boxplots need the quantreg package. Install it with ",
+         "install.packages(\"quantreg\").", call. = FALSE)
+  }
+ 
+  ggplot(x, aes(x = .data[[cat_var]], y = .data[[num_var]], weight = PWGTP)) +
+    geom_boxplot(na.rm = TRUE) +
+    labs(x = cat_var, y = num_var,
+         title = paste("Weighted", num_var, "by", cat_var),
+         subtitle = "Each record is weighted by PWGTP")
+}
+```
+ 
+Calling `plot()` on the multi-year Wyoming data with `year` as the categories shows how travel time changed across the surveys.
+ 
+```{r}
+#| label: example-plot-year
+ 
+plot(wyoming_all_years, cat_var = "year", num_var = "JWMNP")
+```
+ 
+The variables can also be given by position. This plot splits the same travel times by sex.
+ 
+```{r}
+#| label: example-plot-sex
+ 
+plot(wyoming_all_years, "SEX", "JWMNP")
+```
+ 
+A different numeric variable and data set work the same way. This plot shows age by sex for North Carolina in 2024.
+ 
+```{r}
+#| label: example-plot-age
+ 
+plot(nc_2024, cat_var = "SEX", num_var = "AGEP")
+```
+ 
+### Calls that should fail
+ 
+Each call breaks a rule. The chunk keeps going after an error so every message shows.
+ 
+```{r}
+#| label: example-plot-errors
+#| error: true
+ 
+plot(wyoming_all_years)  # both variables are required
+plot(wyoming_all_years, cat_var = "year")  # num_var is missing
+plot(wyoming_all_years, cat_var = "JWMNP", num_var = "JWMNP")  # JWMNP is numeric
+plot(wyoming_all_years, cat_var = "year", num_var = "SEX")  # SEX is a factor
+plot(wyoming_all_years, cat_var = c("year", "SEX"), num_var = "JWMNP")  # only one categorical
+plot(wyoming_all_years, cat_var = "year", num_var = "PWGTP")  # the weight is not plotted
+plot(wyoming_2022, cat_var = "SEX", num_var = "JWAP")  # times are not plotted
+```
 
 
 

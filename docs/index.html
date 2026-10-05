@@ -358,11 +358,11 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>), <span class="dv">1</span>, <span class="dv">300</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[["SEX","PWGTP","AGEP","JWAP","JWMNP","SCHL","AGEP","JWMNP","state"],
-["1","76","30","88","45","22","30","45","37"],
-["1","77","30","94","45","20","30","45","37"],
-["1","279","30","103","45","21","30","45","37"],
-["1","50","30","85","45","17","30","45","37"],
-["1","12","30","79","45","16","30","45",</code></pre>
+["1","60","30","98","45","20","30","45","37"],
+["1","42","30","91","45","18","30","45","37"],
+["2","51","30","91","45","23","30","45","37"],
+["2","45","30","89","45","18","30","45","37"],
+["2","88","30","103","45","19","30","45","</code></pre>
 </div>
 </div>
 <p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
@@ -405,16 +405,16 @@ window.Quarto = {
 <pre><code># A tibble: 58 × 7
    SEX   PWGTP AGEP  JWAP  JWMNP SCHL  state
    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
- 1 1     76    30    88    45    22    37   
- 2 1     77    30    94    45    20    37   
- 3 1     279   30    103   45    21    37   
- 4 1     50    30    85    45    17    37   
- 5 1     12    30    79    45    16    37   
- 6 1     64    30    79    45    22    37   
- 7 2     93    30    76    45    21    37   
- 8 2     204   30    235   45    21    37   
- 9 2     7     30    79    45    16    37   
-10 1     118   30    91    45    18    37   
+ 1 1     60    30    98    45    20    37   
+ 2 1     42    30    91    45    18    37   
+ 3 2     51    30    91    45    23    37   
+ 4 2     45    30    89    45    18    37   
+ 5 2     88    30    103   45    19    37   
+ 6 1     80    30    97    45    21    37   
+ 7 1     87    30    79    45    16    37   
+ 8 2     160   30    214   45    18    37   
+ 9 1     96    30    73    45    21    37   
+10 1     41    30    103   45    21    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -487,18 +487,18 @@ window.Quarto = {
 <span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>census_typed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                               state
-   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                              &lt;chr&gt;
- 1 Male      76    30 88       45 Master's degree                    37   
- 2 Male      77    30 94       45 Associate's degree                 37   
- 3 Male     279    30 103      45 Bachelor's degree                  37   
- 4 Male      50    30 85       45 GED or alternative credential      37   
- 5 Male      12    30 79       45 Regular high school diploma        37   
- 6 Male      64    30 79       45 Master's degree                    37   
- 7 Female    93    30 76       45 Bachelor's degree                  37   
- 8 Female   204    30 235      45 Bachelor's degree                  37   
- 9 Female     7    30 79       45 Regular high school diploma        37   
-10 Male     118    30 91       45 Some college, but less than 1 year 37   
+   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                                     state
+   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                    &lt;chr&gt;
+ 1 Male      60    30 98       45 Associate's degree                       37   
+ 2 Male      42    30 91       45 Some college, but less than 1 year       37   
+ 3 Female    51    30 91       45 Professional degree beyond a bachelor's… 37   
+ 4 Female    45    30 89       45 Some college, but less than 1 year       37   
+ 5 Female    88    30 103      45 1 or more years of college credit, no d… 37   
+ 6 Male      80    30 97       45 Bachelor's degree                        37   
+ 7 Male      87    30 79       45 Regular high school diploma              37   
+ 8 Female   160    30 214      45 Some college, but less than 1 year       37   
+ 9 Male      96    30 73       45 Bachelor's degree                        37   
+10 Male      41    30 103      45 Bachelor's degree                        37   
 # ℹ 48 more rows</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(census_typed<span class="sc">$</span>SEX)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -566,18 +566,18 @@ window.Quarto = {
 <span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>census_timed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX    PWGTP  AGEP JWAP       JWMNP SCHL                               state
-   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;   &lt;dbl&gt; &lt;fct&gt;                              &lt;chr&gt;
- 1 Male      76    30 7H 32M 0S     45 Master's degree                    37   
- 2 Male      77    30 8H 2M 0S      45 Associate's degree                 37   
- 3 Male     279    30 8H 47M 0S     45 Bachelor's degree                  37   
- 4 Male      50    30 7H 17M 0S     45 GED or alternative credential      37   
- 5 Male      12    30 6H 47M 0S     45 Regular high school diploma        37   
- 6 Male      64    30 6H 47M 0S     45 Master's degree                    37   
- 7 Female    93    30 6H 32M 0S     45 Bachelor's degree                  37   
- 8 Female   204    30 19H 47M 0S    45 Bachelor's degree                  37   
- 9 Female     7    30 6H 47M 0S     45 Regular high school diploma        37   
-10 Male     118    30 7H 47M 0S     45 Some college, but less than 1 year 37   
+   SEX    PWGTP  AGEP JWAP      JWMNP SCHL                                 state
+   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;  &lt;dbl&gt; &lt;fct&gt;                                &lt;chr&gt;
+ 1 Male      60    30 8H 22M 0S    45 Associate's degree                   37   
+ 2 Male      42    30 7H 47M 0S    45 Some college, but less than 1 year   37   
+ 3 Female    51    30 7H 47M 0S    45 Professional degree beyond a bachel… 37   
+ 4 Female    45    30 7H 37M 0S    45 Some college, but less than 1 year   37   
+ 5 Female    88    30 8H 47M 0S    45 1 or more years of college credit, … 37   
+ 6 Male      80    30 8H 17M 0S    45 Bachelor's degree                    37   
+ 7 Male      87    30 6H 47M 0S    45 Regular high school diploma          37   
+ 8 Female   160    30 18H 2M 0S    45 Some college, but less than 1 year   37   
+ 9 Male      96    30 6H 17M 0S    45 Bachelor's degree                    37   
+10 Male      41    30 8H 47M 0S    45 Bachelor's degree                    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -826,16 +826,16 @@ window.Quarto = {
 <pre><code># A tibble: 5,962 × 6
    PWGTP JWMNP JWAP      SEX    SCHL                                       state
    &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;  &lt;fct&gt;  &lt;fct&gt;                                      &lt;fct&gt;
- 1    43    NA NA        Male   Regular high school diploma                Wyom…
- 2    53    NA NA        Female Master's degree                            Wyom…
- 3   169    NA NA        Female 1 or more years of college credit, no deg… Wyom…
- 4   248    NA NA        Female Grade 8                                    Wyom…
- 5   246    NA NA        Female Grade 3                                    Wyom…
- 6   202    NA NA        Male   Kindergarten                               Wyom…
- 7    61    NA NA        Female Bachelor's degree                          Wyom…
- 8    55    10 5H 42M 0S Male   Professional degree beyond a bachelor's d… Wyom…
- 9    62    10 4H 12M 0S Male   GED or alternative credential              Wyom…
-10    73    NA NA        Female 1 or more years of college credit, no deg… Wyom…
+ 1    25    NA NA        Male   GED or alternative credential              Wyom…
+ 2   128    NA NA        Male   1 or more years of college credit, no deg… Wyom…
+ 3   121    NA NA        Male   Grade 11                                   Wyom…
+ 4    24    40 6H 42M 0S Female Regular high school diploma                Wyom…
+ 5    26    NA NA        Female Regular high school diploma                Wyom…
+ 6    25     5 9H 7M 0S  Female Regular high school diploma                Wyom…
+ 7    91    NA NA        Male   1 or more years of college credit, no deg… Wyom…
+ 8    20    NA NA        Female Some college, but less than 1 year         Wyom…
+ 9   132    NA NA        Male   Regular high school diploma                Wyom…
+10    89    25 7H 57M 0S Male   Grade 6                                    Wyom…
 # ℹ 5,952 more rows</code></pre>
 </div>
 </div>
@@ -1401,6 +1401,132 @@ $records$SEX
 <div class="cell-output cell-output-error">
 <pre><code>Error:
 ! the data needs a PWGTP column to use as weights.</code></pre>
+</div>
+</div>
+</section>
+</section>
+<section id="plotting-a-census-tibble" class="level2">
+<h2 class="anchored" data-anchor-id="plotting-a-census-tibble">Plotting a census tibble</h2>
+<p>The plot method draws a boxplot of one numeric variable at each level of one categorical variable. The user has to name both, as column-name strings. The categorical variable can be any factor in the tibble, including <code>year</code>. The numeric variable can be any numeric column other than <code>PWGTP</code>, and the time variables are left out.</p>
+<p>The plot uses <code>weight = PWGTP</code> inside <code>aes()</code>, so each record counts as the number of people it represents and the boxes show the weighted quartiles. People with a missing value for the numeric variable are left out of the plot. Because the column names are strings, <code>.data[[cat_var]]</code> picks out the column by name inside <code>aes()</code>, which does the same job as <code>get(cat_var)</code>.</p>
+<p>The first helpers find which columns can be plotted and check that the user named exactly one of each kind.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb156"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the columns a census tibble can be plotted by: factors for the categories,</span></span>
+<span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a><span class="co"># and numeric columns other than the weight (times are left out) for the values</span></span>
+<span id="cb156-3"><a href="#cb156-3" aria-hidden="true" tabindex="-1"></a>census_variables <span class="ot">&lt;-</span> <span class="cf">function</span>(data) {</span>
+<span id="cb156-4"><a href="#cb156-4" aria-hidden="true" tabindex="-1"></a>  is_number <span class="ot">&lt;-</span> <span class="fu">vapply</span>(data, <span class="cf">function</span>(col) <span class="fu">is.numeric</span>(col) <span class="sc">&amp;&amp;</span> <span class="sc">!</span><span class="fu">is.period</span>(col),</span>
+<span id="cb156-5"><a href="#cb156-5" aria-hidden="true" tabindex="-1"></a>                      <span class="fu">logical</span>(<span class="dv">1</span>))</span>
+<span id="cb156-6"><a href="#cb156-6" aria-hidden="true" tabindex="-1"></a>  is_factor <span class="ot">&lt;-</span> <span class="fu">vapply</span>(data, is.factor, <span class="fu">logical</span>(<span class="dv">1</span>))</span>
+<span id="cb156-7"><a href="#cb156-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">numeric     =</span> <span class="fu">setdiff</span>(<span class="fu">names</span>(data)[is_number], <span class="st">"PWGTP"</span>),</span>
+<span id="cb156-8"><a href="#cb156-8" aria-hidden="true" tabindex="-1"></a>       <span class="at">categorical =</span> <span class="fu">names</span>(data)[is_factor])</span>
+<span id="cb156-9"><a href="#cb156-9" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb156-10"><a href="#cb156-10" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb156-11"><a href="#cb156-11" aria-hidden="true" tabindex="-1"></a><span class="co"># like check_choices(), but the user has to give exactly one variable</span></span>
+<span id="cb156-12"><a href="#cb156-12" aria-hidden="true" tabindex="-1"></a>check_one_choice <span class="ot">&lt;-</span> <span class="cf">function</span>(value, allowed, arg_name) {</span>
+<span id="cb156-13"><a href="#cb156-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(value) <span class="sc">!=</span> <span class="dv">1</span>) {</span>
+<span id="cb156-14"><a href="#cb156-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(arg_name, <span class="st">" must be a single variable name. Choose from: "</span>,</span>
+<span id="cb156-15"><a href="#cb156-15" aria-hidden="true" tabindex="-1"></a>         <span class="fu">paste</span>(allowed, <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"."</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb156-16"><a href="#cb156-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb156-17"><a href="#cb156-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_choices</span>(value, allowed, arg_name)</span>
+<span id="cb156-18"><a href="#cb156-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The plot method checks the inputs, then builds the plot. Its first argument is called <code>x</code> to match the <code>plot()</code> generic.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb157"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot method for census tibbles: a weighted boxplot of num_var at each level of cat_var.</span></span>
+<span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a>plot.census <span class="ot">&lt;-</span> <span class="cf">function</span>(x, cat_var, num_var) {</span>
+<span id="cb157-3"><a href="#cb157-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">missing</span>(cat_var) <span class="sc">||</span> <span class="fu">missing</span>(num_var)) {</span>
+<span id="cb157-4"><a href="#cb157-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"give one categorical variable (cat_var) and one numeric variable "</span>,</span>
+<span id="cb157-5"><a href="#cb157-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">"(num_var)."</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb157-6"><a href="#cb157-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb157-7"><a href="#cb157-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="st">"PWGTP"</span> <span class="sc">%in%</span> <span class="fu">names</span>(x)) {</span>
+<span id="cb157-8"><a href="#cb157-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"the data needs a PWGTP column to use as weights."</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb157-9"><a href="#cb157-9" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb157-10"><a href="#cb157-10" aria-hidden="true" tabindex="-1"></a>  options <span class="ot">&lt;-</span> <span class="fu">census_variables</span>(x)</span>
+<span id="cb157-11"><a href="#cb157-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_one_choice</span>(cat_var, options<span class="sc">$</span>categorical, <span class="st">"cat_var"</span>)</span>
+<span id="cb157-12"><a href="#cb157-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_one_choice</span>(num_var, options<span class="sc">$</span>numeric, <span class="st">"num_var"</span>)</span>
+<span id="cb157-13"><a href="#cb157-13" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">requireNamespace</span>(<span class="st">"quantreg"</span>, <span class="at">quietly =</span> <span class="cn">TRUE</span>)) {</span>
+<span id="cb157-14"><a href="#cb157-14" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"weighted boxplots need the quantreg package. Install it with "</span>,</span>
+<span id="cb157-15"><a href="#cb157-15" aria-hidden="true" tabindex="-1"></a>         <span class="st">"install.packages(</span><span class="sc">\"</span><span class="st">quantreg</span><span class="sc">\"</span><span class="st">)."</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb157-16"><a href="#cb157-16" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb157-17"><a href="#cb157-17" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb157-18"><a href="#cb157-18" aria-hidden="true" tabindex="-1"></a>  <span class="fu">ggplot</span>(x, <span class="fu">aes</span>(<span class="at">x =</span> .data[[cat_var]], <span class="at">y =</span> .data[[num_var]], <span class="at">weight =</span> PWGTP)) <span class="sc">+</span></span>
+<span id="cb157-19"><a href="#cb157-19" aria-hidden="true" tabindex="-1"></a>    <span class="fu">geom_boxplot</span>(<span class="at">na.rm =</span> <span class="cn">TRUE</span>) <span class="sc">+</span></span>
+<span id="cb157-20"><a href="#cb157-20" aria-hidden="true" tabindex="-1"></a>    <span class="fu">labs</span>(<span class="at">x =</span> cat_var, <span class="at">y =</span> num_var,</span>
+<span id="cb157-21"><a href="#cb157-21" aria-hidden="true" tabindex="-1"></a>         <span class="at">title =</span> <span class="fu">paste</span>(<span class="st">"Weighted"</span>, num_var, <span class="st">"by"</span>, cat_var),</span>
+<span id="cb157-22"><a href="#cb157-22" aria-hidden="true" tabindex="-1"></a>         <span class="at">subtitle =</span> <span class="st">"Each record is weighted by PWGTP"</span>)</span>
+<span id="cb157-23"><a href="#cb157-23" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Calling <code>plot()</code> on the multi-year Wyoming data with <code>year</code> as the categories shows how travel time changed across the surveys.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb158"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb158-1"><a href="#cb158-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years, <span class="at">cat_var =</span> <span class="st">"year"</span>, <span class="at">num_var =</span> <span class="st">"JWMNP"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/example-plot-year-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The variables can also be given by position. This plot splits the same travel times by sex.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb159"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb159-1"><a href="#cb159-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years, <span class="st">"SEX"</span>, <span class="st">"JWMNP"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/example-plot-sex-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>A different numeric variable and data set work the same way. This plot shows age by sex for North Carolina in 2024.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb160"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb160-1"><a href="#cb160-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(nc_2024, <span class="at">cat_var =</span> <span class="st">"SEX"</span>, <span class="at">num_var =</span> <span class="st">"AGEP"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/example-plot-age-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<section id="calls-that-should-fail-3" class="level3">
+<h3 class="anchored" data-anchor-id="calls-that-should-fail-3">Calls that should fail</h3>
+<p>Each call breaks a rule. The chunk keeps going after an error so every message shows.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb161"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years)  <span class="co"># both variables are required</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! give one categorical variable (cat_var) and one numeric variable (num_var).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb163"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb163-1"><a href="#cb163-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years, <span class="at">cat_var =</span> <span class="st">"year"</span>)  <span class="co"># num_var is missing</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! give one categorical variable (cat_var) and one numeric variable (num_var).</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb165"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb165-1"><a href="#cb165-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years, <span class="at">cat_var =</span> <span class="st">"JWMNP"</span>, <span class="at">num_var =</span> <span class="st">"JWMNP"</span>)  <span class="co"># JWMNP is numeric</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! cat_var cannot include JWMNP. Choose from: year, SEX, SCHL, state.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb167"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb167-1"><a href="#cb167-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years, <span class="at">cat_var =</span> <span class="st">"year"</span>, <span class="at">num_var =</span> <span class="st">"SEX"</span>)  <span class="co"># SEX is a factor</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! num_var cannot include SEX. Choose from: JWMNP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb169"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb169-1"><a href="#cb169-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years, <span class="at">cat_var =</span> <span class="fu">c</span>(<span class="st">"year"</span>, <span class="st">"SEX"</span>), <span class="at">num_var =</span> <span class="st">"JWMNP"</span>)  <span class="co"># only one categorical</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! cat_var must be a single variable name. Choose from: year, SEX, SCHL, state.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb171"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb171-1"><a href="#cb171-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years, <span class="at">cat_var =</span> <span class="st">"year"</span>, <span class="at">num_var =</span> <span class="st">"PWGTP"</span>)  <span class="co"># the weight is not plotted</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! num_var cannot include PWGTP. Choose from: JWMNP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb173"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb173-1"><a href="#cb173-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_2022, <span class="at">cat_var =</span> <span class="st">"SEX"</span>, <span class="at">num_var =</span> <span class="st">"JWAP"</span>)  <span class="co"># times are not plotted</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! num_var cannot include JWAP. Choose from: JWMNP.</code></pre>
 </div>
 </div>
 
