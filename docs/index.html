@@ -329,11 +329,11 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>), <span class="dv">1</span>, <span class="dv">300</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[["SEX","PWGTP","AGEP","JWAP","JWMNP","SCHL","AGEP","JWMNP","state"],
-["1","232","30","82","45","21","30","45","37"],
-["1","153","30","67","45","16","30","45","37"],
-["1","240","30","55","45","16","30","45","37"],
-["1","129","30","109","45","19","30","45","37"],
-["1","180","30","187","45","16","30",</code></pre>
+["1","76","30","88","45","22","30","45","37"],
+["1","77","30","94","45","20","30","45","37"],
+["1","279","30","103","45","21","30","45","37"],
+["1","50","30","85","45","17","30","45","37"],
+["1","12","30","79","45","16","30","45",</code></pre>
 </div>
 </div>
 <p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
@@ -376,16 +376,16 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <pre><code># A tibble: 58 × 7
    SEX   PWGTP AGEP  JWAP  JWMNP SCHL  state
    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
- 1 1     232   30    82    45    21    37   
- 2 1     153   30    67    45    16    37   
- 3 1     240   30    55    45    16    37   
- 4 1     129   30    109   45    19    37   
- 5 1     180   30    187   45    16    37   
- 6 1     236   30    79    45    22    37   
- 7 1     120   30    49    45    16    37   
- 8 1     129   30    91    45    21    37   
- 9 1     68    30    103   45    21    37   
-10 1     73    30    271   45    16    37   
+ 1 1     76    30    88    45    22    37   
+ 2 1     77    30    94    45    20    37   
+ 3 1     279   30    103   45    21    37   
+ 4 1     50    30    85    45    17    37   
+ 5 1     12    30    79    45    16    37   
+ 6 1     64    30    79    45    22    37   
+ 7 2     93    30    76    45    21    37   
+ 8 2     204   30    235   45    21    37   
+ 9 2     7     30    79    45    16    37   
+10 1     118   30    91    45    18    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -458,18 +458,18 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>census_typed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX   PWGTP  AGEP JWAP  JWMNP SCHL                                      state
-   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                     &lt;chr&gt;
- 1 Male    232    30 82       45 Bachelor's degree                         37   
- 2 Male    153    30 67       45 Regular high school diploma               37   
- 3 Male    240    30 55       45 Regular high school diploma               37   
- 4 Male    129    30 109      45 1 or more years of college credit, no de… 37   
- 5 Male    180    30 187      45 Regular high school diploma               37   
- 6 Male    236    30 79       45 Master's degree                           37   
- 7 Male    120    30 49       45 Regular high school diploma               37   
- 8 Male    129    30 91       45 Bachelor's degree                         37   
- 9 Male     68    30 103      45 Bachelor's degree                         37   
-10 Male     73    30 271      45 Regular high school diploma               37   
+   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                               state
+   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                              &lt;chr&gt;
+ 1 Male      76    30 88       45 Master's degree                    37   
+ 2 Male      77    30 94       45 Associate's degree                 37   
+ 3 Male     279    30 103      45 Bachelor's degree                  37   
+ 4 Male      50    30 85       45 GED or alternative credential      37   
+ 5 Male      12    30 79       45 Regular high school diploma        37   
+ 6 Male      64    30 79       45 Master's degree                    37   
+ 7 Female    93    30 76       45 Bachelor's degree                  37   
+ 8 Female   204    30 235      45 Bachelor's degree                  37   
+ 9 Female     7    30 79       45 Regular high school diploma        37   
+10 Male     118    30 91       45 Some college, but less than 1 year 37   
 # ℹ 48 more rows</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(census_typed<span class="sc">$</span>SEX)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -537,24 +537,222 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 <span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>census_timed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX   PWGTP  AGEP JWAP       JWMNP SCHL                                 state
-   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;   &lt;dbl&gt; &lt;fct&gt;                                &lt;chr&gt;
- 1 Male    232    30 7H 2M 0S      45 Bachelor's degree                    37   
- 2 Male    153    30 5H 47M 0S     45 Regular high school diploma          37   
- 3 Male    240    30 4H 47M 0S     45 Regular high school diploma          37   
- 4 Male    129    30 9H 17M 0S     45 1 or more years of college credit, … 37   
- 5 Male    180    30 15H 47M 0S    45 Regular high school diploma          37   
- 6 Male    236    30 6H 47M 0S     45 Master's degree                      37   
- 7 Male    120    30 4H 17M 0S     45 Regular high school diploma          37   
- 8 Male    129    30 7H 47M 0S     45 Bachelor's degree                    37   
- 9 Male     68    30 8H 47M 0S     45 Bachelor's degree                    37   
-10 Male     73    30 22H 47M 0S    45 Regular high school diploma          37   
+   SEX    PWGTP  AGEP JWAP       JWMNP SCHL                               state
+   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;   &lt;dbl&gt; &lt;fct&gt;                              &lt;chr&gt;
+ 1 Male      76    30 7H 32M 0S     45 Master's degree                    37   
+ 2 Male      77    30 8H 2M 0S      45 Associate's degree                 37   
+ 3 Male     279    30 8H 47M 0S     45 Bachelor's degree                  37   
+ 4 Male      50    30 7H 17M 0S     45 GED or alternative credential      37   
+ 5 Male      12    30 6H 47M 0S     45 Regular high school diploma        37   
+ 6 Male      64    30 6H 47M 0S     45 Master's degree                    37   
+ 7 Female    93    30 6H 32M 0S     45 Bachelor's degree                  37   
+ 8 Female   204    30 19H 47M 0S    45 Bachelor's degree                  37   
+ 9 Female     7    30 6H 47M 0S     45 Regular high school diploma        37   
+10 Male     118    30 7H 47M 0S     45 Some college, but less than 1 year 37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
-<p><code>JWAP</code> is now a period column. The first row’s code <code>88</code> became 7:32, the middle of its window, and a person with no arrival time would show <code>NA</code>. With the numeric, factor, and time helpers done, every variable type the project needs can be converted.</p>
+<p><code>JWAP</code> is now a period column. The first row’s code <code>88</code> became 7:32, the middle of its window, and a person with no arrival time would show <code>NA</code>. Every variable type the project needs can be converted with our helper functions.</p>
+</section>
+<section id="querying-one-year" class="level2">
+<h2 class="anchored" data-anchor-id="querying-one-year">Querying one year</h2>
+<p>The helpers so far can: turn a response into a tibble, and convert codes into numbers, factors, and times. The single-year query function chains them. It checks the user’s inputs, builds the request URL from the survey year, the variables, and the geography, sends the request with <code>GET()</code>, turns the reply into a tibble, and converts each column to its proper type using that year’s variable lists.</p>
+<p>The first small helper builds the URL.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the request URL. The key is part of it, so don't print the result.</span></span>
+<span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>build_pums_url <span class="ot">&lt;-</span> <span class="cf">function</span>(year, vars, for_clause, key) {</span>
+<span id="cb51-3"><a href="#cb51-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">paste0</span>(<span class="st">"https://api.census.gov/data/"</span>, year, <span class="st">"/acs/acs1/pums"</span>,</span>
+<span id="cb51-4"><a href="#cb51-4" aria-hidden="true" tabindex="-1"></a>         <span class="st">"?get="</span>, <span class="fu">paste</span>(vars, <span class="at">collapse =</span> <span class="st">","</span>),</span>
+<span id="cb51-5"><a href="#cb51-5" aria-hidden="true" tabindex="-1"></a>         <span class="st">"&amp;for="</span>, for_clause,</span>
+<span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>         <span class="st">"&amp;key="</span>, key)</span>
+<span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The second helper applies the right conversion to each requested column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert each requested column using one year's variable lists.</span></span>
+<span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>convert_pums_types <span class="ot">&lt;-</span> <span class="cf">function</span>(data, year_lists, numeric_vars, cat_vars) {</span>
+<span id="cb52-3"><a href="#cb52-3" aria-hidden="true" tabindex="-1"></a>  time_vars <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>)</span>
+<span id="cb52-4"><a href="#cb52-4" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb52-5"><a href="#cb52-5" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (var <span class="cf">in</span> numeric_vars) {</span>
+<span id="cb52-6"><a href="#cb52-6" aria-hidden="true" tabindex="-1"></a>    data[[var]] <span class="ot">&lt;-</span> <span class="cf">if</span> (var <span class="sc">%in%</span> time_vars) {</span>
+<span id="cb52-7"><a href="#cb52-7" aria-hidden="true" tabindex="-1"></a>      <span class="fu">convert_time</span>(data[[var]], year_lists[[var]])</span>
+<span id="cb52-8"><a href="#cb52-8" aria-hidden="true" tabindex="-1"></a>    } <span class="cf">else</span> {</span>
+<span id="cb52-9"><a href="#cb52-9" aria-hidden="true" tabindex="-1"></a>      <span class="fu">convert_numeric</span>(data[[var]], year_lists[[var]])</span>
+<span id="cb52-10"><a href="#cb52-10" aria-hidden="true" tabindex="-1"></a>    }</span>
+<span id="cb52-11"><a href="#cb52-11" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb52-12"><a href="#cb52-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">for</span> (var <span class="cf">in</span> cat_vars) {</span>
+<span id="cb52-13"><a href="#cb52-13" aria-hidden="true" tabindex="-1"></a>    data[[var]] <span class="ot">&lt;-</span> <span class="fu">convert_factor</span>(data[[var]], year_lists[[var]])</span>
+<span id="cb52-14"><a href="#cb52-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb52-15"><a href="#cb52-15" aria-hidden="true" tabindex="-1"></a>  data</span>
+<span id="cb52-16"><a href="#cb52-16" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="checking-the-inputs" class="level3">
+<h3 class="anchored" data-anchor-id="checking-the-inputs">Checking the inputs</h3>
+<p>The query should fail early, with a message that says what to fix, instead of sending a bad request to the API. <code>year</code> must be a single value from 2021 to 2024. <code>numeric_vars</code> may only contain <code>AGEP</code>, <code>GASP</code>, <code>GRPIP</code>, <code>JWAP</code>, <code>JWDP</code>, <code>JWMNP</code>, and <code>PWGTP</code>, and needs at least one variable other than <code>PWGTP</code>. The person weight <code>PWGTP</code> is always returned, so it is added if the user leaves it out. <code>cat_vars</code> may only contain <code>FER</code>, <code>HHL</code>, <code>SCH</code>, <code>SCHL</code>, and <code>SEX</code>, and needs at least one.</p>
+<p>The first helper checks one set of variable names against its allowed values, so the same code serves both arguments.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>pums_numeric_options <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>, <span class="st">"JWMNP"</span>)</span>
+<span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>pums_cat_options     <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"FER"</span>, <span class="st">"HHL"</span>, <span class="st">"SCH"</span>, <span class="st">"SCHL"</span>, <span class="st">"SEX"</span>)</span>
+<span id="cb53-3"><a href="#cb53-3" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb53-4"><a href="#cb53-4" aria-hidden="true" tabindex="-1"></a><span class="co"># stop unless `values` is a non-empty character vector made only of `allowed`</span></span>
+<span id="cb53-5"><a href="#cb53-5" aria-hidden="true" tabindex="-1"></a><span class="co"># names. the message names the offending values and lists the options.</span></span>
+<span id="cb53-6"><a href="#cb53-6" aria-hidden="true" tabindex="-1"></a>check_choices <span class="ot">&lt;-</span> <span class="cf">function</span>(values, allowed, arg_name) {</span>
+<span id="cb53-7"><a href="#cb53-7" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(values) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb53-8"><a href="#cb53-8" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(arg_name, <span class="st">" must include at least one variable. Choose from: "</span>,</span>
+<span id="cb53-9"><a href="#cb53-9" aria-hidden="true" tabindex="-1"></a>         <span class="fu">paste</span>(allowed, <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"."</span>, <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb53-10"><a href="#cb53-10" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb53-11"><a href="#cb53-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="sc">!</span><span class="fu">is.character</span>(values) <span class="sc">||</span> <span class="fu">anyNA</span>(values)) {</span>
+<span id="cb53-12"><a href="#cb53-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(arg_name, <span class="st">" must be a character vector of variable names."</span>,</span>
+<span id="cb53-13"><a href="#cb53-13" aria-hidden="true" tabindex="-1"></a>         <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb53-14"><a href="#cb53-14" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb53-15"><a href="#cb53-15" aria-hidden="true" tabindex="-1"></a>  bad <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(values, allowed)</span>
+<span id="cb53-16"><a href="#cb53-16" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(bad) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb53-17"><a href="#cb53-17" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(arg_name, <span class="st">" cannot include "</span>, <span class="fu">paste</span>(bad, <span class="at">collapse =</span> <span class="st">", "</span>),</span>
+<span id="cb53-18"><a href="#cb53-18" aria-hidden="true" tabindex="-1"></a>         <span class="st">". Choose from: "</span>, <span class="fu">paste</span>(allowed, <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"."</span>,</span>
+<span id="cb53-19"><a href="#cb53-19" aria-hidden="true" tabindex="-1"></a>         <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The second helper runs all the checks and returns the cleaned arguments, with <code>PWGTP</code> added to the numeric variables if it was missing.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check the user's inputs and return them cleaned up.</span></span>
+<span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>validate_pums_args <span class="ot">&lt;-</span> <span class="cf">function</span>(year, numeric_vars, cat_vars) {</span>
+<span id="cb54-3"><a href="#cb54-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(year) <span class="sc">!=</span> <span class="dv">1</span> <span class="sc">||</span> <span class="fu">is.na</span>(year) <span class="sc">||</span> <span class="sc">!</span>(year <span class="sc">%in%</span> <span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>)) {</span>
+<span id="cb54-4"><a href="#cb54-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"year must be a single value: 2021, 2022, 2023, or 2024"</span>,</span>
+<span id="cb54-5"><a href="#cb54-5" aria-hidden="true" tabindex="-1"></a>         <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb54-6"><a href="#cb54-6" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb54-7"><a href="#cb54-7" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_choices</span>(numeric_vars, <span class="fu">c</span>(pums_numeric_options, <span class="st">"PWGTP"</span>), <span class="st">"numeric_vars"</span>)</span>
+<span id="cb54-8"><a href="#cb54-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_choices</span>(cat_vars, pums_cat_options, <span class="st">"cat_vars"</span>)</span>
+<span id="cb54-9"><a href="#cb54-9" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb54-10"><a href="#cb54-10" aria-hidden="true" tabindex="-1"></a>  numeric_vars <span class="ot">&lt;-</span> <span class="fu">unique</span>(<span class="fu">c</span>(numeric_vars, <span class="st">"PWGTP"</span>))   <span class="co"># PWGTP is always returned</span></span>
+<span id="cb54-11"><a href="#cb54-11" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(<span class="fu">setdiff</span>(numeric_vars, <span class="st">"PWGTP"</span>)) <span class="sc">==</span> <span class="dv">0</span>) {</span>
+<span id="cb54-12"><a href="#cb54-12" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"numeric_vars must include at least one variable besides PWGTP. "</span>,</span>
+<span id="cb54-13"><a href="#cb54-13" aria-hidden="true" tabindex="-1"></a>         <span class="st">"Choose from: "</span>, <span class="fu">paste</span>(pums_numeric_options, <span class="at">collapse =</span> <span class="st">", "</span>), <span class="st">"."</span>,</span>
+<span id="cb54-14"><a href="#cb54-14" aria-hidden="true" tabindex="-1"></a>         <span class="at">call. =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb54-15"><a href="#cb54-15" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb54-16"><a href="#cb54-16" aria-hidden="true" tabindex="-1"></a>  <span class="fu">list</span>(<span class="at">year =</span> year, <span class="at">numeric_vars =</span> numeric_vars, <span class="at">cat_vars =</span> <span class="fu">unique</span>(cat_vars))</span>
+<span id="cb54-17"><a href="#cb54-17" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+</section>
+<section id="the-query-function" class="level3">
+<h3 class="anchored" data-anchor-id="the-query-function">The query function</h3>
+<p>The query function defaults ask for the 2024 survey, <code>AGEP</code> and <code>PWGTP</code> as the numeric variables, <code>SEX</code> as the categorical variable, and North Carolina. The key comes from the <code>CENSUS_KEY</code> environment variable, and the variable lists default to the <code>pums_vars</code> object loaded earlier. The inputs are validated first so that a bad request fails before call to API.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># query the PUMS API for one year and return a tibble with converted types.</span></span>
+<span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>get_pums_year <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year =</span> <span class="dv">2024</span>,</span>
+<span id="cb55-3"><a href="#cb55-3" aria-hidden="true" tabindex="-1"></a>                          <span class="at">numeric_vars =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"PWGTP"</span>),</span>
+<span id="cb55-4"><a href="#cb55-4" aria-hidden="true" tabindex="-1"></a>                          <span class="at">cat_vars =</span> <span class="st">"SEX"</span>,</span>
+<span id="cb55-5"><a href="#cb55-5" aria-hidden="true" tabindex="-1"></a>                          <span class="at">for_clause =</span> <span class="st">"state:37"</span>,</span>
+<span id="cb55-6"><a href="#cb55-6" aria-hidden="true" tabindex="-1"></a>                          <span class="at">key =</span> <span class="fu">Sys.getenv</span>(<span class="st">"CENSUS_KEY"</span>),</span>
+<span id="cb55-7"><a href="#cb55-7" aria-hidden="true" tabindex="-1"></a>                          <span class="at">var_lists =</span> pums_vars) {</span>
+<span id="cb55-8"><a href="#cb55-8" aria-hidden="true" tabindex="-1"></a>  args <span class="ot">&lt;-</span> <span class="fu">validate_pums_args</span>(year, numeric_vars, cat_vars)</span>
+<span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>  url  <span class="ot">&lt;-</span> <span class="fu">build_pums_url</span>(args<span class="sc">$</span>year, <span class="fu">c</span>(args<span class="sc">$</span>numeric_vars, args<span class="sc">$</span>cat_vars),</span>
+<span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>                         for_clause, key)</span>
+<span id="cb55-11"><a href="#cb55-11" aria-hidden="true" tabindex="-1"></a>  data <span class="ot">&lt;-</span> <span class="fu">pums_response_to_tibble</span>(<span class="fu">GET</span>(url))</span>
+<span id="cb55-12"><a href="#cb55-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">convert_pums_types</span>(data, var_lists[[<span class="fu">as.character</span>(args<span class="sc">$</span>year)]],</span>
+<span id="cb55-13"><a href="#cb55-13" aria-hidden="true" tabindex="-1"></a>                     args<span class="sc">$</span>numeric_vars, args<span class="sc">$</span>cat_vars)</span>
+<span id="cb55-14"><a href="#cb55-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>Calling it with no arguments returns every North Carolina record in the 2024 survey.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a>nc_2024 <span class="ot">&lt;-</span> <span class="fu">get_pums_year</span>()</span>
+<span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>nc_2024</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 114,270 × 4
+    AGEP PWGTP SEX    state
+   &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;  &lt;chr&gt;
+ 1    23    60 Male   37   
+ 2    21    49 Male   37   
+ 3    20    24 Male   37   
+ 4    79    54 Female 37   
+ 5    18    79 Male   37   
+ 6    19    54 Female 37   
+ 7    22    58 Female 37   
+ 8    18    17 Female 37   
+ 9    22    30 Male   37   
+10    67    37 Female 37   
+# ℹ 114,260 more rows</code></pre>
+</div>
+</div>
+<p>The result has one row per sampled person, with <code>AGEP</code> and <code>PWGTP</code> as numbers, <code>SEX</code> as a factor, and the geography column <code>state</code> from the API. In our second call it asks for Wyoming (<code>"state:56"</code>), in 2022, with the weight, travel time, and arrival time as the numeric variables and sex and education as the categorical variables.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb58"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb58-1"><a href="#cb58-1" aria-hidden="true" tabindex="-1"></a>wyoming_2022 <span class="ot">&lt;-</span> <span class="fu">get_pums_year</span>(</span>
+<span id="cb58-2"><a href="#cb58-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">year =</span> <span class="dv">2022</span>,</span>
+<span id="cb58-3"><a href="#cb58-3" aria-hidden="true" tabindex="-1"></a>  <span class="at">numeric_vars =</span> <span class="fu">c</span>(<span class="st">"PWGTP"</span>, <span class="st">"JWMNP"</span>, <span class="st">"JWAP"</span>),</span>
+<span id="cb58-4"><a href="#cb58-4" aria-hidden="true" tabindex="-1"></a>  <span class="at">cat_vars =</span> <span class="fu">c</span>(<span class="st">"SEX"</span>, <span class="st">"SCHL"</span>),</span>
+<span id="cb58-5"><a href="#cb58-5" aria-hidden="true" tabindex="-1"></a>  <span class="at">for_clause =</span> <span class="st">"state:56"</span></span>
+<span id="cb58-6"><a href="#cb58-6" aria-hidden="true" tabindex="-1"></a>)</span>
+<span id="cb58-7"><a href="#cb58-7" aria-hidden="true" tabindex="-1"></a>wyoming_2022</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 5,962 × 6
+   PWGTP JWMNP JWAP      SEX    SCHL                                       state
+   &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;  &lt;fct&gt;  &lt;fct&gt;                                      &lt;chr&gt;
+ 1    25    NA NA        Male   GED or alternative credential              56   
+ 2   128    NA NA        Male   1 or more years of college credit, no deg… 56   
+ 3   121    NA NA        Male   Grade 11                                   56   
+ 4    24    40 6H 42M 0S Female Regular high school diploma                56   
+ 5    26    NA NA        Female Regular high school diploma                56   
+ 6    25     5 9H 7M 0S  Female Regular high school diploma                56   
+ 7    91    NA NA        Male   1 or more years of college credit, no deg… 56   
+ 8    20    NA NA        Female Some college, but less than 1 year         56   
+ 9   132    NA NA        Male   Regular high school diploma                56   
+10    89    25 7H 57M 0S Male   Grade 6                                    56   
+# ℹ 5,952 more rows</code></pre>
+</div>
+</div>
+<p>The columns are returned in the order requested and each have the correct type.</p>
+<p>If the user leaves out the weight, the function adds it. Here only <code>JWMNP</code> is requested and <code>PWGTP</code> still comes back.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb60"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb60-1"><a href="#cb60-1" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(<span class="fu">get_pums_year</span>(<span class="at">numeric_vars =</span> <span class="st">"JWMNP"</span>, <span class="at">for_clause =</span> <span class="st">"state:56"</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] "JWMNP" "PWGTP" "SEX"   "state"</code></pre>
+</div>
+</div>
+</section>
+<section id="calls-that-should-fail" class="level3">
+<h3 class="anchored" data-anchor-id="calls-that-should-fail">Calls that should fail</h3>
+<p>Each call below breaks one rule, and the validation checks are run before anything is sent to the API. Set to keep going after an error so that every message shows.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb62"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb62-1"><a href="#cb62-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">year =</span> <span class="dv">2020</span>)                              <span class="co"># year out of range</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! year must be a single value: 2021, 2022, 2023, or 2024</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb64"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb64-1"><a href="#cb64-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">year =</span> <span class="fu">c</span>(<span class="dv">2022</span>, <span class="dv">2023</span>))                     <span class="co"># more than one year</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! year must be a single value: 2021, 2022, 2023, or 2024</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb66"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb66-1"><a href="#cb66-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">numeric_vars =</span> <span class="st">"PWGTP"</span>)                   <span class="co"># nothing besides PWGTP</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars must include at least one variable besides PWGTP. Choose from: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb68"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb68-1"><a href="#cb68-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">numeric_vars =</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"SEX"</span>))          <span class="co"># SEX is categorical</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars cannot include SEX. Choose from: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP, PWGTP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb70"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb70-1"><a href="#cb70-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">numeric_vars =</span> <span class="st">"WAGP"</span>)                    <span class="co"># not an allowed variable</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! numeric_vars cannot include WAGP. Choose from: AGEP, GASP, GRPIP, JWAP, JWDP, JWMNP, PWGTP.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">cat_vars =</span> <span class="fu">character</span>(<span class="dv">0</span>))                  <span class="co"># no categorical variable</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! cat_vars must include at least one variable. Choose from: FER, HHL, SCH, SCHL, SEX.</code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb74"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb74-1"><a href="#cb74-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">cat_vars =</span> <span class="fu">c</span>(<span class="st">"SEX"</span>, <span class="st">"AGEP"</span>))              <span class="co"># AGEP is numeric</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error:
+! cat_vars cannot include AGEP. Choose from: FER, HHL, SCH, SCHL, SEX.</code></pre>
+</div>
+</div>
+<p>Each message names what was wrong and lists the allowed choices.</p>
 
 
+</section>
 </section>
 </section>
 

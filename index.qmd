@@ -415,6 +415,185 @@ census_timed
 ```
  
 `JWAP` is now a period column. The first row's code `88` became 7:32, the
-middle of its window, and a person with no arrival time would show `NA`. With
-the numeric, factor, and time helpers done, every variable type the project
-needs can be converted.
+middle of its window, and a person with no arrival time would show `NA`. Every variable type the project needs can be converted with our helper functions.
+
+ 
+ 
+## Querying one year
+ 
+The helpers so far can: turn a response into a tibble, and
+convert codes into numbers, factors, and times. The single-year query function
+chains them. It checks the user's inputs, builds the request URL from the survey year, the variables,
+and the geography, sends the request with `GET()`, turns the reply into a
+tibble, and converts each column to its proper type using that year's variable
+lists.
+ 
+The first small helper builds the URL.
+ 
+```{r}
+#| label: build-url
+ 
+# Build the request URL. The key is part of it, so don't print the result.
+build_pums_url <- function(year, vars, for_clause, key) {
+  paste0("https://api.census.gov/data/", year, "/acs/acs1/pums",
+         "?get=", paste(vars, collapse = ","),
+         "&for=", for_clause,
+         "&key=", key)
+}
+```
+ 
+The second helper applies the right conversion to each requested column.
+ 
+```{r}
+#| label: convert-types
+ 
+# convert each requested column using one year's variable lists.
+convert_pums_types <- function(data, year_lists, numeric_vars, cat_vars) {
+  time_vars <- c("JWAP", "JWDP")
+ 
+  for (var in numeric_vars) {
+    data[[var]] <- if (var %in% time_vars) {
+      convert_time(data[[var]], year_lists[[var]])
+    } else {
+      convert_numeric(data[[var]], year_lists[[var]])
+    }
+  }
+  for (var in cat_vars) {
+    data[[var]] <- convert_factor(data[[var]], year_lists[[var]])
+  }
+  data
+}
+```
+ 
+### Checking the inputs
+ 
+The query should fail early, with a message that says what to fix, instead of sending a bad request to the API. `year` must be a single value from 2021 to 2024. `numeric_vars` may only contain `AGEP`, `GASP`, `GRPIP`, `JWAP`, `JWDP`, `JWMNP`, and `PWGTP`, and needs at least one variable other than `PWGTP`. The person weight `PWGTP` is always returned, so it is added if the user leaves it out. `cat_vars` may only contain `FER`, `HHL`, `SCH`, `SCHL`, and `SEX`, and needs at least one.
+ 
+The first helper checks one set of variable names against its allowed values, so the same code serves both arguments.
+ 
+```{r}
+#| label: check-choices
+ 
+pums_numeric_options <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP")
+pums_cat_options     <- c("FER", "HHL", "SCH", "SCHL", "SEX")
+ 
+# stop unless `values` is a non-empty character vector made only of `allowed`
+# names. the message names the offending values and lists the options.
+check_choices <- function(values, allowed, arg_name) {
+  if (length(values) == 0) {
+    stop(arg_name, " must include at least one variable. Choose from: ",
+         paste(allowed, collapse = ", "), ".", call. = FALSE)
+  }
+  if (!is.character(values) || anyNA(values)) {
+    stop(arg_name, " must be a character vector of variable names.",
+         call. = FALSE)
+  }
+  bad <- setdiff(values, allowed)
+  if (length(bad) > 0) {
+    stop(arg_name, " cannot include ", paste(bad, collapse = ", "),
+         ". Choose from: ", paste(allowed, collapse = ", "), ".",
+         call. = FALSE)
+  }
+}
+```
+ 
+The second helper runs all the checks and returns the cleaned arguments, with `PWGTP` added to the numeric variables if it was missing.
+ 
+```{r}
+#| label: validate-args
+ 
+# check the user's inputs and return them cleaned up.
+validate_pums_args <- function(year, numeric_vars, cat_vars) {
+  if (length(year) != 1 || is.na(year) || !(year %in% 2021:2024)) {
+    stop("year must be a single value: 2021, 2022, 2023, or 2024",
+         call. = FALSE)
+  }
+  check_choices(numeric_vars, c(pums_numeric_options, "PWGTP"), "numeric_vars")
+  check_choices(cat_vars, pums_cat_options, "cat_vars")
+ 
+  numeric_vars <- unique(c(numeric_vars, "PWGTP"))   # PWGTP is always returned
+  if (length(setdiff(numeric_vars, "PWGTP")) == 0) {
+    stop("numeric_vars must include at least one variable besides PWGTP. ",
+         "Choose from: ", paste(pums_numeric_options, collapse = ", "), ".",
+         call. = FALSE)
+  }
+  list(year = year, numeric_vars = numeric_vars, cat_vars = unique(cat_vars))
+}
+```
+ 
+### The query function
+ 
+The query function defaults ask for the 2024 survey, `AGEP` and `PWGTP` as the numeric variables, `SEX` as the categorical variable, and North Carolina. The key comes from the `CENSUS_KEY` environment variable, and the variable lists default to the `pums_vars` object loaded earlier. The inputs are validated first so that a bad request fails before call to API.
+ 
+```{r}
+#| label: get-pums-year
+ 
+# query the PUMS API for one year and return a tibble with converted types.
+get_pums_year <- function(year = 2024,
+                          numeric_vars = c("AGEP", "PWGTP"),
+                          cat_vars = "SEX",
+                          for_clause = "state:37",
+                          key = Sys.getenv("CENSUS_KEY"),
+                          var_lists = pums_vars) {
+  args <- validate_pums_args(year, numeric_vars, cat_vars)
+  url  <- build_pums_url(args$year, c(args$numeric_vars, args$cat_vars),
+                         for_clause, key)
+  data <- pums_response_to_tibble(GET(url))
+  convert_pums_types(data, var_lists[[as.character(args$year)]],
+                     args$numeric_vars, args$cat_vars)
+}
+```
+ 
+Calling it with no arguments returns every North Carolina record in the 2024
+survey.
+ 
+```{r}
+#| label: example-default-query
+ 
+nc_2024 <- get_pums_year()
+nc_2024
+```
+ 
+The result has one row per sampled person, with `AGEP` and `PWGTP` as numbers,
+`SEX` as a factor, and the geography column `state` from the API. In our second call it asks for Wyoming (`"state:56"`), in 2022, with the weight, travel time, and arrival time as the numeric variables and sex and education as the categorical variables.
+ 
+```{r}
+#| label: example-custom-query
+ 
+wyoming_2022 <- get_pums_year(
+  year = 2022,
+  numeric_vars = c("PWGTP", "JWMNP", "JWAP"),
+  cat_vars = c("SEX", "SCHL"),
+  for_clause = "state:56"
+)
+wyoming_2022
+```
+ 
+The columns are returned in the order requested and each have the correct type.
+ 
+If the user leaves out the weight, the function adds it. Here only `JWMNP` is requested and `PWGTP` still comes back.
+ 
+```{r}
+#| label: example-weight-added
+ 
+names(get_pums_year(numeric_vars = "JWMNP", for_clause = "state:56"))
+```
+ 
+### Calls that should fail
+ 
+Each call below breaks one rule, and the validation checks are run before anything is sent to the API. Set to keep going after an error so that every message shows.
+ 
+```{r}
+#| label: example-errors
+#| error: true
+ 
+get_pums_year(year = 2020)                              # year out of range
+get_pums_year(year = c(2022, 2023))                     # more than one year
+get_pums_year(numeric_vars = "PWGTP")                   # nothing besides PWGTP
+get_pums_year(numeric_vars = c("AGEP", "SEX"))          # SEX is categorical
+get_pums_year(numeric_vars = "WAGP")                    # not an allowed variable
+get_pums_year(cat_vars = character(0))                  # no categorical variable
+get_pums_year(cat_vars = c("SEX", "AGEP"))              # AGEP is numeric
+```
+ 
+Each message names what was wrong and lists the allowed choices.
