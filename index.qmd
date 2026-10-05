@@ -873,7 +873,7 @@ summary.census <- function(object, numeric_vars = NULL, cat_vars = NULL) {
                       logical(1))
   is_factor <- vapply(object, is.factor, logical(1))
   numeric_options <- setdiff(names(object)[is_number], "PWGTP")
-  cat_options     <- names(object)[is_factor]
+  cat_options <- names(object)[is_factor]
  
   if (is.null(numeric_vars)) {
     numeric_vars <- numeric_options
@@ -890,9 +890,9 @@ summary.census <- function(object, numeric_vars = NULL, cat_vars = NULL) {
   list(
     means = vapply(numeric_vars, function(v) weighted_mean(object[[v]], weights),
                    numeric(1)),
-    sds   = vapply(numeric_vars, function(v) weighted_sd(object[[v]], weights),
+    sds = vapply(numeric_vars, function(v) weighted_sd(object[[v]], weights),
                    numeric(1)),
-    counts  = sapply(cat_vars, function(v) weighted_counts(object[[v]], weights),
+    counts = sapply(cat_vars, function(v) weighted_counts(object[[v]], weights),
                      simplify = FALSE),
     records = sapply(cat_vars, function(v) c(table(object[[v]])),
                      simplify = FALSE)
