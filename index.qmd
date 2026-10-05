@@ -520,10 +520,108 @@ validate_pums_args <- function(year, numeric_vars, cat_vars) {
   list(year = year, numeric_vars = numeric_vars, cat_vars = unique(cat_vars))
 }
 ```
+
+
+### Choosing the geography
+ 
+The user picks a geography level, `"Region"`, `"Division"`, or `"State"`, and then one place at that level, such as `"North Carolina"`. The API wants this as a `for=` clause such as `state:37`, so the helpers below translate the user's choice. The level has to be exactly one of the three. `"All"` is not a level because of the size of the data. The place is given as a code or as the label stored in the saved lists, such as `37` or `"North Carolina/NC"`, in any capitalization, and the allowed places come from the lists saved in `pums_vars`. The value `"all"` returns every region, division, or state. If no place is given, each level has a default that contains North Carolina.
+ 
+The first helpers set the defaults and look up the allowed places for a level.
+ 
+```{r}
+#| label: geography-lookup
+ 
+# the place used when the user gives a level but no value
+default_geography <- c(region = "South",
+                       division = "South Atlantic (South region)",
+                       state = "North Carolina/NC")
+ 
+# code -> label for one level, leaving out Puerto Rico
+geography_choices <- function(level, year_lists) {
+  items <- year_lists[[toupper(level)]]$items
+  items[!grepl("^Puerto Rico", items)]
+}
+```
+ 
+The next helpers check the level, find the code for the place the user typed, and put the `for=` clause together. A value that matches nothing stops with a message that shows what is allowed.
+ 
+```{r}
+#| label: build-for-clause
+ 
+# check the geography level and return it in lowercase, as the API spells it
+check_geography_level <- function(geography) {
+  if (length(geography) != 1 || is.na(geography) ||
+      !(tolower(geography) %in% c("region", "division", "state"))) {
+    stop("geography must be a single value: \"Region\", \"Division\", or ",
+         "\"State\". \"All\" is not available because of the size of the data.",
+         call. = FALSE)
+  }
+  tolower(geography)
+}
+ 
+# find the code for what the user typed: a code (37) or a label as stored in
+# the saved lists (North Carolina/NC), in any capitalization
+match_geography <- function(value, items, level) {
+  typed <- tolower(trimws(as.character(value)))
+  if (grepl("^[0-9]+$", typed)) {
+    hit <- as.numeric(names(items)) == as.numeric(typed)
+  } else {
+    hit <- tolower(items) == typed
+  }
+  if (!any(hit)) {
+    shown <- if (length(items) <= 10) items else head(items, 5)
+    stop("\"", value, "\" is not a valid ", level, ". Use a code or a label, ",
+         "such as: ", paste(shown, collapse = "; "),
+         if (length(items) > 10) "; ..." else "", ".", call. = FALSE)
+  }
+  names(items)[hit][1]
+}
+ 
+# build the for= clause, for example "state:37". "all" becomes a * wildcard.
+build_for_clause <- function(level, value, year_lists) {
+  if (is.null(value)) value <- default_geography[[level]]
+  if (length(value) != 1 || is.na(value)) {
+    stop("geography_value must be a single value, or \"all\".", call. = FALSE)
+  }
+  if (tolower(trimws(as.character(value))) == "all") {
+    return(paste0(level, ":*"))
+  }
+  items <- geography_choices(level, year_lists)
+  paste0(level, ":", match_geography(value, items, level))
+}
+```
+ 
+The API adds a column named `state`, `region`, or `division` to the response. The last helper turns it into a factor of readable labels, in the same way as the other categorical variables. Levels that do not appear are dropped.
+ 
+```{r}
+#| label: convert-geography
+ 
+# turn the geography column into a factor of labels
+convert_geography <- function(data, level, year_lists) {
+  data[[level]] <- convert_factor(data[[level]], year_lists[[toupper(level)]])
+  data <- data[!grepl("^Puerto Rico", as.character(data[[level]])), ]
+  data[[level]] <- droplevels(data[[level]])
+  data
+}
+```
+ 
+Calling `build_for_clause()` directly shows what the user's input turns into. The same state works as its label or its code, and `"all"` becomes `*`. Running a query with `"all"` downloads the whole country.
+ 
+```{r}
+#| label: example-clauses
+ 
+build_for_clause("state", "North Carolina/NC", lists_2024)
+build_for_clause("state", "wyoming/wy", lists_2024)
+build_for_clause("state", 37, lists_2024)
+build_for_clause("region", "South", lists_2024)
+build_for_clause("division", "Mountain (West region)", lists_2024)
+build_for_clause("state", "all", lists_2024)
+build_for_clause("state", NULL, lists_2024)
+```
  
 ### The query function
  
-The query function defaults ask for the 2024 survey, `AGEP` and `PWGTP` as the numeric variables, `SEX` as the categorical variable, and North Carolina. The key comes from the `CENSUS_KEY` environment variable, and the variable lists default to the `pums_vars` object loaded earlier. The inputs are validated first so that a bad request fails before call to API.
+The query function defaults ask for the 2024 survey, `AGEP` and `PWGTP` as the numeric variables, `SEX` as the categorical variable, and the state of North Carolina. The key comes from the `CENSUS_KEY` environment variable, and the variable lists default to the `pums_vars` object loaded earlier. The inputs are validated first so that a bad request fails before call to API. The geography is checked next, and just before the tibble is returned it is given the class `census`, which is what lets the summary and plot methods in Part 2 recognize it.
  
 ```{r}
 #| label: get-pums-year
@@ -532,15 +630,23 @@ The query function defaults ask for the 2024 survey, `AGEP` and `PWGTP` as the n
 get_pums_year <- function(year = 2024,
                           numeric_vars = c("AGEP", "PWGTP"),
                           cat_vars = "SEX",
-                          for_clause = "state:37",
+                          geography = "State",
+                          geography_value = NULL,
                           key = Sys.getenv("CENSUS_KEY"),
                           var_lists = pums_vars) {
-  args <- validate_pums_args(year, numeric_vars, cat_vars)
+  args       <- validate_pums_args(year, numeric_vars, cat_vars)
+  year_lists <- var_lists[[as.character(args$year)]]
+  level      <- check_geography_level(geography)
+  for_clause <- build_for_clause(level, geography_value, year_lists)
+ 
   url  <- build_pums_url(args$year, c(args$numeric_vars, args$cat_vars),
                          for_clause, key)
   data <- pums_response_to_tibble(GET(url))
-  convert_pums_types(data, var_lists[[as.character(args$year)]],
-                     args$numeric_vars, args$cat_vars)
+  data <- convert_pums_types(data, year_lists, args$numeric_vars, args$cat_vars)
+  data <- convert_geography(data, level, year_lists)
+ 
+  class(data) <- c("census", class(data))
+  data
 }
 ```
  
@@ -555,7 +661,7 @@ nc_2024
 ```
  
 The result has one row per sampled person, with `AGEP` and `PWGTP` as numbers,
-`SEX` as a factor, and the geography column `state` from the API. In our second call it asks for Wyoming (`"state:56"`), in 2022, with the weight, travel time, and arrival time as the numeric variables and sex and education as the categorical variables.
+`SEX` as a factor, and the geography column `state` as a factor of state names. In our second call it asks for Wyoming, in 2022, with the weight, travel time, and arrival time as the numeric variables and sex and education as the categorical variables.
  
 ```{r}
 #| label: example-custom-query
@@ -564,7 +670,7 @@ wyoming_2022 <- get_pums_year(
   year = 2022,
   numeric_vars = c("PWGTP", "JWMNP", "JWAP"),
   cat_vars = c("SEX", "SCHL"),
-  for_clause = "state:56"
+  geography_value = "Wyoming/WY"
 )
 wyoming_2022
 ```
@@ -576,7 +682,21 @@ If the user leaves out the weight, the function adds it. Here only `JWMNP` is re
 ```{r}
 #| label: example-weight-added
  
-names(get_pums_year(numeric_vars = "JWMNP", for_clause = "state:56"))
+names(get_pums_year(numeric_vars = "JWMNP", geography_value = "Wyoming/WY"))
+```
+ 
+### Other geography levels
+ 
+The geography level changes with `geography`. This call asks for the New England division in 2023, the smallest of the divisions to download. The `division` column holds the division's label, and the result carries the `census` class.
+ 
+```{r}
+#| label: example-division-query
+ 
+new_england_2023 <- get_pums_year(year = 2023,
+                                  geography = "Division",
+                                  geography_value = "New England (Northeast region)")
+new_england_2023
+inherits(new_england_2023, "census")
 ```
  
 ### Calls that should fail
@@ -587,13 +707,20 @@ Each call below breaks one rule, and the validation checks are run before anythi
 #| label: example-errors
 #| error: true
  
-get_pums_year(year = 2020)                              # year out of range
-get_pums_year(year = c(2022, 2023))                     # more than one year
-get_pums_year(numeric_vars = "PWGTP")                   # nothing besides PWGTP
-get_pums_year(numeric_vars = c("AGEP", "SEX"))          # SEX is categorical
-get_pums_year(numeric_vars = "WAGP")                    # not an allowed variable
-get_pums_year(cat_vars = character(0))                  # no categorical variable
-get_pums_year(cat_vars = c("SEX", "AGEP"))              # AGEP is numeric
+get_pums_year(year = 2020)  # year out of range
+get_pums_year(year = c(2022, 2023))  # more than one year
+get_pums_year(numeric_vars = "PWGTP")  # nothing besides PWGTP
+get_pums_year(numeric_vars = c("AGEP", "SEX")) # SEX is categorical
+get_pums_year(numeric_vars = "WAGP")  # not an allowed variable
+get_pums_year(cat_vars = character(0))  # no categorical variable
+get_pums_year(cat_vars = c("SEX", "AGEP")) # AGEP is numeric
+get_pums_year(geography = "All")  # All is not a level
+get_pums_year(geography = c("State", "Region"))  # more than one level
+get_pums_year(geography = "County")  # not an available level
+get_pums_year(geography_value = "Atlantis")  # no such state
+get_pums_year(geography = "Region", geography_value = "NC")  # NC is not a region
+get_pums_year(geography_value = c("NC", "SC"))  # more than one place
+get_pums_year(geography_value = "Puerto Rico")  # not covered by the project
 ```
  
 Each message names what was wrong and lists the allowed choices.
