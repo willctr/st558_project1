@@ -15,3 +15,132 @@ library(httr)
 library(jsonlite)
 library(tidyverse)
 ```
+
+# Part 1: Data Processing
+
+The API returns mapped values. A person's `SEX` returns `1` or `2`, etc. The context behind these mappings are published in the `variables.json` file from the census bureau. Each variable in `variables.json` has a `label` and a `values` entry. Categorical variables' `values` holds `item` list of code and the description, whereas continuous variables hold a `range` of min, max, and description. 
+
+The first helper lists the varaibles needed and defines `sort_by_code()` because the JSON files stores codes in not in order, but the factor levels should follow the order of the codes.
+
+```{r}
+#| label: variable-helpers
+
+# variables the project needs. The state variable is named ST in the 2021 and
+# 2022 files and STATE in the 2023 and 2024 files, so it is added separately
+# inside parse_pums_variables().
+pums_vars_needed <- c("AGEP", "GASP", "GRPIP", "JWAP", "JWDP", "JWMNP",
+                      "PWGTP", "FER", "HHL", "SCH", "SCHL", "SEX",
+                      "REGION", "DIVISION")
+
+# order a named vector of code -> description by numeric code. If any code
+# isn't numeric, leave the original order alone.
+sort_by_code <- function(items) {
+  codes <- suppressWarnings(as.numeric(names(items)))
+  if (is.null(items) || anyNA(codes)) return(items)
+  items[order(codes)]
+}
+```
+
+The parsing function takes the JSON after it has been read into an R list and
+returns one element per needed variable. Each element is itself a list with
+the variable's `label`, its `items` , and its `ranges`. The state
+variable is stored under the single name `STATE`, so downstream ingestors do not need to account for which year the data is from.
+
+```{r}
+#| label: parse-variables
+
+# pull the needed variables out of one parsed variables.json.
+# parsed: list from fromJSON(..., simplifyVector = FALSE)
+# year: single survey year (decides whether to look for ST or STATE)
+parse_pums_variables <- function(parsed, year) {
+  all_vars  <- parsed$variables
+  state_var <- if (year <= 2022) "ST" else "STATE"
+  wanted    <- c(pums_vars_needed, state_var)
+
+  missing_vars <- setdiff(wanted, names(all_vars))
+  if (length(missing_vars) > 0) {
+    stop("Variables not found in the ", year, " file: ",
+         paste(missing_vars, collapse = ", "))
+  }
+
+  out <- lapply(all_vars[wanted], function(v) {
+    list(
+      label  = v$label,
+      items  = sort_by_code(unlist(v$values$item)),
+      ranges = lapply(v$values$range, function(r) {
+        list(min = as.numeric(r$min), max = as.numeric(r$max),
+             description = r$description)
+      })
+    )
+  })
+
+  # store the state variable under one name for every year
+  names(out)[names(out) == state_var] <- "STATE"
+  out
+}
+```
+
+The second function checks the year, builds the URL for
+that year's `variables.json`, requests it with `GET()`, stops on an HTTP
+error, and passes the parsed JSON to the function above. Keeping the request
+and the parsing in separate functions means the parser can be tested on a
+saved file without touching the API.
+
+```{r}
+#| label: get-variables
+
+# GET the variables.json for one year and parse it.
+get_pums_variables <- function(year) {
+  if (length(year) != 1 || !(year %in% 2021:2024)) {
+    stop("year must be a single value: 2021, 2022, 2023, or 2024")
+  }
+  url <- paste0("https://api.census.gov/data/", year,
+                "/acs/acs1/pums/variables.json")
+  resp <- GET(url)
+  stop_for_status(resp)
+  parsed <- fromJSON(content(resp, as = "text", encoding = "UTF-8"),
+                     simplifyVector = FALSE)
+  parse_pums_variables(parsed, year)
+}
+```
+
+## Checking function on year 2024
+
+Check the parser output. Input year 2024. The output should be 15 variables and `SEX` should show its two codes `Male` and `Female`.
+
+```{r}
+#| label: example-one-year
+
+vars_2024 <- get_pums_variables(2024)
+names(vars_2024)
+vars_2024$SEX$items
+```
+
+The names are the 14 variables the project asks for plus `STATE`, and `SEX`
+has two codes: `1` is Male and `2` is Female.
+
+The state variable is called `ST` in the 2021 and 2022 files. The parser
+should hide that difference, so asking for 2021 should still give a list that
+contains `STATE`.
+
+```{r}
+#| label: example-older-year
+
+vars_2021 <- get_pums_variables(2021)
+"STATE" %in% names(vars_2021)
+```
+
+The year check should reject anything outside 2021 to 2024. The
+chunk below is set to keep rendering after an error so the message shows on
+the page.
+
+```{r}
+#| label: example-bad-year
+#| error: true
+
+get_pums_variables(2020)
+```
+
+The parser was shown to run successfully for 2024. Now we run it on all years
+and save the results for later code to reference.
+

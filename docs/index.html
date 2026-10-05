@@ -167,8 +167,113 @@ pre > code.sourceCode > span > a:first-child::before { text-decoration: underlin
 ℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors</code></pre>
 </div>
 </div>
+</section>
+<section id="part-1-data-processing" class="level1">
+<h1>Part 1: Data Processing</h1>
+<p>The API returns mapped values. A person’s <code>SEX</code> returns <code>1</code> or <code>2</code>, etc. The context behind these mappings are published in the <code>variables.json</code> file from the census bureau. Each variable in <code>variables.json</code> has a <code>label</code> and a <code>values</code> entry. Categorical variables’ <code>values</code> holds <code>item</code> list of code and the description, whereas continuous variables hold a <code>range</code> of min, max, and description.</p>
+<p>The first helper lists the varaibles needed and defines <code>sort_by_code()</code> because the JSON files stores codes in not in order, but the factor levels should follow the order of the codes.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># variables the project needs. The state variable is named ST in the 2021 and</span></span>
+<span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 2022 files and STATE in the 2023 and 2024 files, so it is added separately</span></span>
+<span id="cb3-3"><a href="#cb3-3" aria-hidden="true" tabindex="-1"></a><span class="co"># inside parse_pums_variables().</span></span>
+<span id="cb3-4"><a href="#cb3-4" aria-hidden="true" tabindex="-1"></a>pums_vars_needed <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>, <span class="st">"JWMNP"</span>,</span>
+<span id="cb3-5"><a href="#cb3-5" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"PWGTP"</span>, <span class="st">"FER"</span>, <span class="st">"HHL"</span>, <span class="st">"SCH"</span>, <span class="st">"SCHL"</span>, <span class="st">"SEX"</span>,</span>
+<span id="cb3-6"><a href="#cb3-6" aria-hidden="true" tabindex="-1"></a>                      <span class="st">"REGION"</span>, <span class="st">"DIVISION"</span>)</span>
+<span id="cb3-7"><a href="#cb3-7" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb3-8"><a href="#cb3-8" aria-hidden="true" tabindex="-1"></a><span class="co"># order a named vector of code -&gt; description by numeric code. If any code</span></span>
+<span id="cb3-9"><a href="#cb3-9" aria-hidden="true" tabindex="-1"></a><span class="co"># isn't numeric, leave the original order alone.</span></span>
+<span id="cb3-10"><a href="#cb3-10" aria-hidden="true" tabindex="-1"></a>sort_by_code <span class="ot">&lt;-</span> <span class="cf">function</span>(items) {</span>
+<span id="cb3-11"><a href="#cb3-11" aria-hidden="true" tabindex="-1"></a>  codes <span class="ot">&lt;-</span> <span class="fu">suppressWarnings</span>(<span class="fu">as.numeric</span>(<span class="fu">names</span>(items)))</span>
+<span id="cb3-12"><a href="#cb3-12" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">is.null</span>(items) <span class="sc">||</span> <span class="fu">anyNA</span>(codes)) <span class="fu">return</span>(items)</span>
+<span id="cb3-13"><a href="#cb3-13" aria-hidden="true" tabindex="-1"></a>  items[<span class="fu">order</span>(codes)]</span>
+<span id="cb3-14"><a href="#cb3-14" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The parsing function takes the JSON after it has been read into an R list and returns one element per needed variable. Each element is itself a list with the variable’s <code>label</code>, its <code>items</code> , and its <code>ranges</code>. The state variable is stored under the single name <code>STATE</code>, so downstream ingestors do not need to account for which year the data is from.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb4"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb4-1"><a href="#cb4-1" aria-hidden="true" tabindex="-1"></a><span class="co"># pull the needed variables out of one parsed variables.json.</span></span>
+<span id="cb4-2"><a href="#cb4-2" aria-hidden="true" tabindex="-1"></a><span class="co"># parsed: list from fromJSON(..., simplifyVector = FALSE)</span></span>
+<span id="cb4-3"><a href="#cb4-3" aria-hidden="true" tabindex="-1"></a><span class="co"># year: single survey year (decides whether to look for ST or STATE)</span></span>
+<span id="cb4-4"><a href="#cb4-4" aria-hidden="true" tabindex="-1"></a>parse_pums_variables <span class="ot">&lt;-</span> <span class="cf">function</span>(parsed, year) {</span>
+<span id="cb4-5"><a href="#cb4-5" aria-hidden="true" tabindex="-1"></a>  all_vars  <span class="ot">&lt;-</span> parsed<span class="sc">$</span>variables</span>
+<span id="cb4-6"><a href="#cb4-6" aria-hidden="true" tabindex="-1"></a>  state_var <span class="ot">&lt;-</span> <span class="cf">if</span> (year <span class="sc">&lt;=</span> <span class="dv">2022</span>) <span class="st">"ST"</span> <span class="cf">else</span> <span class="st">"STATE"</span></span>
+<span id="cb4-7"><a href="#cb4-7" aria-hidden="true" tabindex="-1"></a>  wanted    <span class="ot">&lt;-</span> <span class="fu">c</span>(pums_vars_needed, state_var)</span>
+<span id="cb4-8"><a href="#cb4-8" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-9"><a href="#cb4-9" aria-hidden="true" tabindex="-1"></a>  missing_vars <span class="ot">&lt;-</span> <span class="fu">setdiff</span>(wanted, <span class="fu">names</span>(all_vars))</span>
+<span id="cb4-10"><a href="#cb4-10" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(missing_vars) <span class="sc">&gt;</span> <span class="dv">0</span>) {</span>
+<span id="cb4-11"><a href="#cb4-11" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"Variables not found in the "</span>, year, <span class="st">" file: "</span>,</span>
+<span id="cb4-12"><a href="#cb4-12" aria-hidden="true" tabindex="-1"></a>         <span class="fu">paste</span>(missing_vars, <span class="at">collapse =</span> <span class="st">", "</span>))</span>
+<span id="cb4-13"><a href="#cb4-13" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb4-14"><a href="#cb4-14" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-15"><a href="#cb4-15" aria-hidden="true" tabindex="-1"></a>  out <span class="ot">&lt;-</span> <span class="fu">lapply</span>(all_vars[wanted], <span class="cf">function</span>(v) {</span>
+<span id="cb4-16"><a href="#cb4-16" aria-hidden="true" tabindex="-1"></a>    <span class="fu">list</span>(</span>
+<span id="cb4-17"><a href="#cb4-17" aria-hidden="true" tabindex="-1"></a>      <span class="at">label  =</span> v<span class="sc">$</span>label,</span>
+<span id="cb4-18"><a href="#cb4-18" aria-hidden="true" tabindex="-1"></a>      <span class="at">items  =</span> <span class="fu">sort_by_code</span>(<span class="fu">unlist</span>(v<span class="sc">$</span>values<span class="sc">$</span>item)),</span>
+<span id="cb4-19"><a href="#cb4-19" aria-hidden="true" tabindex="-1"></a>      <span class="at">ranges =</span> <span class="fu">lapply</span>(v<span class="sc">$</span>values<span class="sc">$</span>range, <span class="cf">function</span>(r) {</span>
+<span id="cb4-20"><a href="#cb4-20" aria-hidden="true" tabindex="-1"></a>        <span class="fu">list</span>(<span class="at">min =</span> <span class="fu">as.numeric</span>(r<span class="sc">$</span>min), <span class="at">max =</span> <span class="fu">as.numeric</span>(r<span class="sc">$</span>max),</span>
+<span id="cb4-21"><a href="#cb4-21" aria-hidden="true" tabindex="-1"></a>             <span class="at">description =</span> r<span class="sc">$</span>description)</span>
+<span id="cb4-22"><a href="#cb4-22" aria-hidden="true" tabindex="-1"></a>      })</span>
+<span id="cb4-23"><a href="#cb4-23" aria-hidden="true" tabindex="-1"></a>    )</span>
+<span id="cb4-24"><a href="#cb4-24" aria-hidden="true" tabindex="-1"></a>  })</span>
+<span id="cb4-25"><a href="#cb4-25" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb4-26"><a href="#cb4-26" aria-hidden="true" tabindex="-1"></a>  <span class="co"># store the state variable under one name for every year</span></span>
+<span id="cb4-27"><a href="#cb4-27" aria-hidden="true" tabindex="-1"></a>  <span class="fu">names</span>(out)[<span class="fu">names</span>(out) <span class="sc">==</span> state_var] <span class="ot">&lt;-</span> <span class="st">"STATE"</span></span>
+<span id="cb4-28"><a href="#cb4-28" aria-hidden="true" tabindex="-1"></a>  out</span>
+<span id="cb4-29"><a href="#cb4-29" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<p>The second function checks the year, builds the URL for that year’s <code>variables.json</code>, requests it with <code>GET()</code>, stops on an HTTP error, and passes the parsed JSON to the function above. Keeping the request and the parsing in separate functions means the parser can be tested on a saved file without touching the API.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb5"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb5-1"><a href="#cb5-1" aria-hidden="true" tabindex="-1"></a><span class="co"># GET the variables.json for one year and parse it.</span></span>
+<span id="cb5-2"><a href="#cb5-2" aria-hidden="true" tabindex="-1"></a>get_pums_variables <span class="ot">&lt;-</span> <span class="cf">function</span>(year) {</span>
+<span id="cb5-3"><a href="#cb5-3" aria-hidden="true" tabindex="-1"></a>  <span class="cf">if</span> (<span class="fu">length</span>(year) <span class="sc">!=</span> <span class="dv">1</span> <span class="sc">||</span> <span class="sc">!</span>(year <span class="sc">%in%</span> <span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>)) {</span>
+<span id="cb5-4"><a href="#cb5-4" aria-hidden="true" tabindex="-1"></a>    <span class="fu">stop</span>(<span class="st">"year must be a single value: 2021, 2022, 2023, or 2024"</span>)</span>
+<span id="cb5-5"><a href="#cb5-5" aria-hidden="true" tabindex="-1"></a>  }</span>
+<span id="cb5-6"><a href="#cb5-6" aria-hidden="true" tabindex="-1"></a>  url <span class="ot">&lt;-</span> <span class="fu">paste0</span>(<span class="st">"https://api.census.gov/data/"</span>, year,</span>
+<span id="cb5-7"><a href="#cb5-7" aria-hidden="true" tabindex="-1"></a>                <span class="st">"/acs/acs1/pums/variables.json"</span>)</span>
+<span id="cb5-8"><a href="#cb5-8" aria-hidden="true" tabindex="-1"></a>  resp <span class="ot">&lt;-</span> <span class="fu">GET</span>(url)</span>
+<span id="cb5-9"><a href="#cb5-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">stop_for_status</span>(resp)</span>
+<span id="cb5-10"><a href="#cb5-10" aria-hidden="true" tabindex="-1"></a>  parsed <span class="ot">&lt;-</span> <span class="fu">fromJSON</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>),</span>
+<span id="cb5-11"><a href="#cb5-11" aria-hidden="true" tabindex="-1"></a>                     <span class="at">simplifyVector =</span> <span class="cn">FALSE</span>)</span>
+<span id="cb5-12"><a href="#cb5-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">parse_pums_variables</span>(parsed, year)</span>
+<span id="cb5-13"><a href="#cb5-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+</div>
+<section id="checking-function-on-year-2024" class="level2">
+<h2 class="anchored" data-anchor-id="checking-function-on-year-2024">Checking function on year 2024</h2>
+<p>Check the parser output. Input year 2024. The output should be 15 variables and <code>SEX</code> should show its two codes <code>Male</code> and <code>Female</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb6"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb6-1"><a href="#cb6-1" aria-hidden="true" tabindex="-1"></a>vars_2024 <span class="ot">&lt;-</span> <span class="fu">get_pums_variables</span>(<span class="dv">2024</span>)</span>
+<span id="cb6-2"><a href="#cb6-2" aria-hidden="true" tabindex="-1"></a><span class="fu">names</span>(vars_2024)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code> [1] "AGEP"     "GASP"     "GRPIP"    "JWAP"     "JWDP"     "JWMNP"   
+ [7] "PWGTP"    "FER"      "HHL"      "SCH"      "SCHL"     "SEX"     
+[13] "REGION"   "DIVISION" "STATE"   </code></pre>
+</div>
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb8"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb8-1"><a href="#cb8-1" aria-hidden="true" tabindex="-1"></a>vars_2024<span class="sc">$</span>SEX<span class="sc">$</span>items</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>       1        2 
+  "Male" "Female" </code></pre>
+</div>
+</div>
+<p>The names are the 14 variables the project asks for plus <code>STATE</code>, and <code>SEX</code> has two codes: <code>1</code> is Male and <code>2</code> is Female.</p>
+<p>The state variable is called <code>ST</code> in the 2021 and 2022 files. The parser should hide that difference, so asking for 2021 should still give a list that contains <code>STATE</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>vars_2021 <span class="ot">&lt;-</span> <span class="fu">get_pums_variables</span>(<span class="dv">2021</span>)</span>
+<span id="cb10-2"><a href="#cb10-2" aria-hidden="true" tabindex="-1"></a><span class="st">"STATE"</span> <span class="sc">%in%</span> <span class="fu">names</span>(vars_2021)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>[1] TRUE</code></pre>
+</div>
+</div>
+<p>The year check should reject anything outside 2021 to 2024. The chunk below is set to keep rendering after an error so the message shows on the page.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb12"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb12-1"><a href="#cb12-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_variables</span>(<span class="dv">2020</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-error">
+<pre><code>Error in `get_pums_variables()`:
+! year must be a single value: 2021, 2022, 2023, or 2024</code></pre>
+</div>
+</div>
+<p>The parser was shown to run successfully for 2024. Now we run it on all years and save the results for later code to reference.</p>
 
 
+</section>
 </section>
 
 </main> <!-- /main -->
