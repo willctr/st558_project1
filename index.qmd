@@ -2,3 +2,16 @@
 title: "Querying and Summarizing Census PUMS Data in R"
 author: "Will Carter"
 ---
+
+# Introduction
+We will manipulate and process data sets from Public Use Microdata Sample (PUMS) census API. We are focusing on datasets for years 2021, 2022, 2023, and 2024.
+
+
+```{r}
+#| label: setup
+
+# tidyverse attaches dplyr, tibble, purrr, ggplot2, and lubridate. httr makes the web requests and jsonlite parses JSON.
+library(httr)
+library(jsonlite)
+library(tidyverse)
+```

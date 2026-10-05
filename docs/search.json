@@ -1,0 +1,9 @@
+[
+  {
+    "objectID": "index.html",
+    "href": "index.html",
+    "title": "Querying and Summarizing Census PUMS Data in R",
+    "section": "",
+    "text": "Introduction\nWe will manipulate and process data sets from Public Use Microdata Sample (PUMS) census API. We are focusing on datasets for years 2021, 2022, 2023, and 2024.\n\n# tidyverse attaches dplyr, tibble, purrr, ggplot2, and lubridate. httr makes the web requests and jsonlite parses JSON.\nlibrary(httr)\nlibrary(jsonlite)\nlibrary(tidyverse)\n\n── Attaching core tidyverse packages ──────────────────────── tidyverse 2.0.0 ──\n✔ dplyr     1.2.1     ✔ readr     2.2.0\n✔ forcats   1.0.1     ✔ stringr   1.6.0\n✔ ggplot2   4.0.3     ✔ tibble    3.3.1\n✔ lubridate 1.9.5     ✔ tidyr     1.3.2\n✔ purrr     1.2.2     \n── Conflicts ────────────────────────────────────────── tidyverse_conflicts() ──\n✖ dplyr::filter()  masks stats::filter()\n✖ purrr::flatten() masks jsonlite::flatten()\n✖ dplyr::lag()     masks stats::lag()\nℹ Use the conflicted package (&lt;http://conflicted.r-lib.org/&gt;) to force all conflicts to become errors"
+  }
+]
