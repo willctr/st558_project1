@@ -603,7 +603,7 @@ build_for_clause("state", NULL, lists_2024)
  
 ### The query function
  
-The query function defaults ask for the 2024 survey, `AGEP` and `PWGTP` as the numeric variables, `SEX` as the categorical variable, and the state of North Carolina. The key comes from the `CENSUS_KEY` environment variable, and the variable lists default to the `pums_vars` object loaded earlier. The inputs are validated first so that a bad request fails before call to API. The geography is checked next, and just before the tibble is returned it is given the class `census`, which is what lets the summary and plot methods in Part 2 recognize it.
+The query function defaults ask for the 2024 survey, `AGEP` and `PWGTP` as the numeric variables, `SEX` as the categorical variable, and the state of North Carolina. The key comes from the `CENSUS_KEY` environment variable, and the variable lists default to the `pums_vars` object loaded earlier. The inputs are validated first so that a bad request fails before call to API. The geography is checked next, before the tibble is returned it is given the class `census`, which is what lets the summary and plot methods in Part 2 recognize it.
  
 ```{r}
 #| label: get-pums-year

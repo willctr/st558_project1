@@ -366,11 +366,11 @@ window.Quarto = {
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb25"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb25-1"><a href="#cb25-1" aria-hidden="true" tabindex="-1"></a><span class="fu">cat</span>(<span class="fu">substr</span>(<span class="fu">content</span>(resp, <span class="at">as =</span> <span class="st">"text"</span>, <span class="at">encoding =</span> <span class="st">"UTF-8"</span>), <span class="dv">1</span>, <span class="dv">300</span>))</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code>[["SEX","PWGTP","AGEP","JWAP","JWMNP","SCHL","AGEP","JWMNP","state"],
-["1","60","30","98","45","20","30","45","37"],
-["1","42","30","91","45","18","30","45","37"],
-["2","51","30","91","45","23","30","45","37"],
-["2","45","30","89","45","18","30","45","37"],
-["2","88","30","103","45","19","30","45","</code></pre>
+["1","232","30","82","45","21","30","45","37"],
+["1","153","30","67","45","16","30","45","37"],
+["1","240","30","55","45","16","30","45","37"],
+["1","129","30","109","45","19","30","45","37"],
+["1","180","30","187","45","16","30",</code></pre>
 </div>
 </div>
 <p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
@@ -413,16 +413,16 @@ window.Quarto = {
 <pre><code># A tibble: 58 × 7
    SEX   PWGTP AGEP  JWAP  JWMNP SCHL  state
    &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt; &lt;chr&gt;
- 1 1     60    30    98    45    20    37   
- 2 1     42    30    91    45    18    37   
- 3 2     51    30    91    45    23    37   
- 4 2     45    30    89    45    18    37   
- 5 2     88    30    103   45    19    37   
- 6 1     80    30    97    45    21    37   
- 7 1     87    30    79    45    16    37   
- 8 2     160   30    214   45    18    37   
- 9 1     96    30    73    45    21    37   
-10 1     41    30    103   45    21    37   
+ 1 1     232   30    82    45    21    37   
+ 2 1     153   30    67    45    16    37   
+ 3 1     240   30    55    45    16    37   
+ 4 1     129   30    109   45    19    37   
+ 5 1     180   30    187   45    16    37   
+ 6 1     236   30    79    45    22    37   
+ 7 1     120   30    49    45    16    37   
+ 8 1     129   30    91    45    21    37   
+ 9 1     68    30    103   45    21    37   
+10 1     73    30    271   45    16    37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -495,18 +495,18 @@ window.Quarto = {
 <span id="cb38-12"><a href="#cb38-12" aria-hidden="true" tabindex="-1"></a>census_typed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX    PWGTP  AGEP JWAP  JWMNP SCHL                                     state
-   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                    &lt;chr&gt;
- 1 Male      60    30 98       45 Associate's degree                       37   
- 2 Male      42    30 91       45 Some college, but less than 1 year       37   
- 3 Female    51    30 91       45 Professional degree beyond a bachelor's… 37   
- 4 Female    45    30 89       45 Some college, but less than 1 year       37   
- 5 Female    88    30 103      45 1 or more years of college credit, no d… 37   
- 6 Male      80    30 97       45 Bachelor's degree                        37   
- 7 Male      87    30 79       45 Regular high school diploma              37   
- 8 Female   160    30 214      45 Some college, but less than 1 year       37   
- 9 Male      96    30 73       45 Bachelor's degree                        37   
-10 Male      41    30 103      45 Bachelor's degree                        37   
+   SEX   PWGTP  AGEP JWAP  JWMNP SCHL                                      state
+   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;chr&gt; &lt;dbl&gt; &lt;fct&gt;                                     &lt;chr&gt;
+ 1 Male    232    30 82       45 Bachelor's degree                         37   
+ 2 Male    153    30 67       45 Regular high school diploma               37   
+ 3 Male    240    30 55       45 Regular high school diploma               37   
+ 4 Male    129    30 109      45 1 or more years of college credit, no de… 37   
+ 5 Male    180    30 187      45 Regular high school diploma               37   
+ 6 Male    236    30 79       45 Master's degree                           37   
+ 7 Male    120    30 49       45 Regular high school diploma               37   
+ 8 Male    129    30 91       45 Bachelor's degree                         37   
+ 9 Male     68    30 103      45 Bachelor's degree                         37   
+10 Male     73    30 271      45 Regular high school diploma               37   
 # ℹ 48 more rows</code></pre>
 </div>
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb40"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb40-1"><a href="#cb40-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(census_typed<span class="sc">$</span>SEX)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -574,18 +574,18 @@ window.Quarto = {
 <span id="cb49-4"><a href="#cb49-4" aria-hidden="true" tabindex="-1"></a>census_timed</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-stdout">
 <pre><code># A tibble: 58 × 7
-   SEX    PWGTP  AGEP JWAP      JWMNP SCHL                                 state
-   &lt;fct&gt;  &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;  &lt;dbl&gt; &lt;fct&gt;                                &lt;chr&gt;
- 1 Male      60    30 8H 22M 0S    45 Associate's degree                   37   
- 2 Male      42    30 7H 47M 0S    45 Some college, but less than 1 year   37   
- 3 Female    51    30 7H 47M 0S    45 Professional degree beyond a bachel… 37   
- 4 Female    45    30 7H 37M 0S    45 Some college, but less than 1 year   37   
- 5 Female    88    30 8H 47M 0S    45 1 or more years of college credit, … 37   
- 6 Male      80    30 8H 17M 0S    45 Bachelor's degree                    37   
- 7 Male      87    30 6H 47M 0S    45 Regular high school diploma          37   
- 8 Female   160    30 18H 2M 0S    45 Some college, but less than 1 year   37   
- 9 Male      96    30 6H 17M 0S    45 Bachelor's degree                    37   
-10 Male      41    30 8H 47M 0S    45 Bachelor's degree                    37   
+   SEX   PWGTP  AGEP JWAP       JWMNP SCHL                                 state
+   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;   &lt;dbl&gt; &lt;fct&gt;                                &lt;chr&gt;
+ 1 Male    232    30 7H 2M 0S      45 Bachelor's degree                    37   
+ 2 Male    153    30 5H 47M 0S     45 Regular high school diploma          37   
+ 3 Male    240    30 4H 47M 0S     45 Regular high school diploma          37   
+ 4 Male    129    30 9H 17M 0S     45 1 or more years of college credit, … 37   
+ 5 Male    180    30 15H 47M 0S    45 Regular high school diploma          37   
+ 6 Male    236    30 6H 47M 0S     45 Master's degree                      37   
+ 7 Male    120    30 4H 17M 0S     45 Regular high school diploma          37   
+ 8 Male    129    30 7H 47M 0S     45 Bachelor's degree                    37   
+ 9 Male     68    30 8H 47M 0S     45 Bachelor's degree                    37   
+10 Male     73    30 22H 47M 0S    45 Regular high school diploma          37   
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
@@ -775,7 +775,7 @@ window.Quarto = {
 </section>
 <section id="the-query-function" class="level3">
 <h3 class="anchored" data-anchor-id="the-query-function">The query function</h3>
-<p>The query function defaults ask for the 2024 survey, <code>AGEP</code> and <code>PWGTP</code> as the numeric variables, <code>SEX</code> as the categorical variable, and the state of North Carolina. The key comes from the <code>CENSUS_KEY</code> environment variable, and the variable lists default to the <code>pums_vars</code> object loaded earlier. The inputs are validated first so that a bad request fails before call to API. The geography is checked next, and just before the tibble is returned it is given the class <code>census</code>, which is what lets the summary and plot methods in Part 2 recognize it.</p>
+<p>The query function defaults ask for the 2024 survey, <code>AGEP</code> and <code>PWGTP</code> as the numeric variables, <code>SEX</code> as the categorical variable, and the state of North Carolina. The key comes from the <code>CENSUS_KEY</code> environment variable, and the variable lists default to the <code>pums_vars</code> object loaded earlier. The inputs are validated first so that a bad request fails before call to API. The geography is checked next, before the tibble is returned it is given the class <code>census</code>, which is what lets the summary and plot methods in Part 2 recognize it.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb72"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb72-1"><a href="#cb72-1" aria-hidden="true" tabindex="-1"></a><span class="co"># query the PUMS API for one year and return a tibble with converted types.</span></span>
 <span id="cb72-2"><a href="#cb72-2" aria-hidden="true" tabindex="-1"></a>get_pums_year <span class="ot">&lt;-</span> <span class="cf">function</span>(<span class="at">year =</span> <span class="dv">2024</span>,</span>
@@ -834,16 +834,16 @@ window.Quarto = {
 <pre><code># A tibble: 5,962 × 6
    PWGTP JWMNP JWAP      SEX    SCHL                                       state
    &lt;dbl&gt; &lt;dbl&gt; &lt;Period&gt;  &lt;fct&gt;  &lt;fct&gt;                                      &lt;fct&gt;
- 1    25    NA NA        Male   GED or alternative credential              Wyom…
- 2   128    NA NA        Male   1 or more years of college credit, no deg… Wyom…
- 3   121    NA NA        Male   Grade 11                                   Wyom…
- 4    24    40 6H 42M 0S Female Regular high school diploma                Wyom…
- 5    26    NA NA        Female Regular high school diploma                Wyom…
- 6    25     5 9H 7M 0S  Female Regular high school diploma                Wyom…
- 7    91    NA NA        Male   1 or more years of college credit, no deg… Wyom…
- 8    20    NA NA        Female Some college, but less than 1 year         Wyom…
- 9   132    NA NA        Male   Regular high school diploma                Wyom…
-10    89    25 7H 57M 0S Male   Grade 6                                    Wyom…
+ 1    43    NA NA        Male   Regular high school diploma                Wyom…
+ 2    53    NA NA        Female Master's degree                            Wyom…
+ 3   169    NA NA        Female 1 or more years of college credit, no deg… Wyom…
+ 4   248    NA NA        Female Grade 8                                    Wyom…
+ 5   246    NA NA        Female Grade 3                                    Wyom…
+ 6   202    NA NA        Male   Kindergarten                               Wyom…
+ 7    61    NA NA        Female Bachelor's degree                          Wyom…
+ 8    55    10 5H 42M 0S Male   Professional degree beyond a bachelor's d… Wyom…
+ 9    62    10 4H 12M 0S Male   GED or alternative credential              Wyom…
+10    73    NA NA        Female 1 or more years of college credit, no deg… Wyom…
 # ℹ 5,952 more rows</code></pre>
 </div>
 </div>
