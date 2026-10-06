@@ -176,7 +176,15 @@ window.Quarto = {
 
 <section id="introduction" class="level1">
 <h1>Introduction</h1>
-<p>We will manipulate and process data sets from Public Use Microdata Sample (PUMS) census API. We are focusing on datasets for years 2021, 2022, 2023, and 2024.</p>
+<p>The Public Use Microdata Sample (PUMS) data is a set of person-level records from the U.S. Census Bureau served through an API. This report builds a small toolkit in R for working with that data. We focus on the survey years 2021, 2022, 2023, and 2024.</p>
+<p>Each row of PUMS data is a sampled person and <code>PWGTP</code>, is the person weight used to estimate how many people in the population would be represented by this record. Every summary and plot use <code>PWGTP</code>.</p>
+<p>The report consists of three parts.</p>
+<ol type="1">
+<li><strong>Data processing.</strong> Functions that read the variable descriptions the API publishes, query the API, and return tibbles with numbers, factors, and times.</li>
+<li><strong>Generic functions.</strong> <code>summary()</code> and <code>plot()</code> methods for those tibbles that use the weights.</li>
+<li><strong>Investigation.</strong> The functions are used to ask whether commute time and age differ by education level in North Carolina, and whether that changed from 2021 to 2024.</li>
+</ol>
+<p>This implementation uses a Census API key stored in the <code>CENSUS_KEY</code> environment variable. The <code>quantreg</code> package has to be installed for the weighted boxplots.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb1"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb1-1"><a href="#cb1-1" aria-hidden="true" tabindex="-1"></a><span class="co"># tidyverse attaches dplyr, tibble, purrr, ggplot2, and lubridate. httr makes the web requests and jsonlite parses JSON.</span></span>
 <span id="cb1-2"><a href="#cb1-2" aria-hidden="true" tabindex="-1"></a><span class="fu">library</span>(httr)</span>
@@ -200,7 +208,7 @@ window.Quarto = {
 <section id="part-1-data-processing" class="level1">
 <h1>Part 1: Data Processing</h1>
 <p>The API returns mapped values. A person’s <code>SEX</code> returns <code>1</code> or <code>2</code>, etc. The context behind these mappings are published in the <code>variables.json</code> file from the census bureau. Each variable in <code>variables.json</code> has a <code>label</code> and a <code>values</code> entry. Categorical variables’ <code>values</code> holds <code>item</code> list of code and the description, whereas continuous variables hold a <code>range</code> of min, max, and description.</p>
-<p>The first helper lists the varaibles needed and defines <code>sort_by_code()</code> because the JSON files stores codes in not in order, but the factor levels should follow the order of the codes.</p>
+<p>This helper function lists the varaibles needed and defines <code>sort_by_code()</code> because the JSON files do not store the codes in numeric order, while factor levels should follow the code order.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb3"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb3-1"><a href="#cb3-1" aria-hidden="true" tabindex="-1"></a><span class="co"># variables the project needs. The state variable is named ST in the 2021 and</span></span>
 <span id="cb3-2"><a href="#cb3-2" aria-hidden="true" tabindex="-1"></a><span class="co"># 2022 files and STATE in the 2023 and 2024 files, so it is added separately</span></span>
@@ -282,7 +290,7 @@ window.Quarto = {
   "Male" "Female" </code></pre>
 </div>
 </div>
-<p>The names are the 14 variables the project asks for plus <code>STATE</code>, and <code>SEX</code> has two codes: <code>1</code> is Male and <code>2</code> is Female.</p>
+<p>The names are the 14 variables as well as <code>STATE</code>. <code>SEX</code>has two codes: <code>1</code> is Male and <code>2</code> is Female.</p>
 <p>The state variable is called <code>ST</code> in the 2021 and 2022 files. The parser should hide that difference, so asking for 2021 should still give a list that contains <code>STATE</code>.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb10"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb10-1"><a href="#cb10-1" aria-hidden="true" tabindex="-1"></a>vars_2021 <span class="ot">&lt;-</span> <span class="fu">get_pums_variables</span>(<span class="dv">2021</span>)</span>
@@ -340,7 +348,7 @@ window.Quarto = {
 </section>
 <section id="parsing-an-api-response" class="level2">
 <h2 class="anchored" data-anchor-id="parsing-an-api-response">Parsing an API response</h2>
-<p>A request to the PUMS API consists of the base address for the year, a <code>get=</code> list of variables, a <code>for=</code> clause for the geography, any optional filters, and the key. Before writing the main query function, one small request shows what the API sends back. This one asks for sex, person weight, age, arrival time at work, travel time to work, and education for people in North Carolina (<code>for=state:37</code>) who are 30 years old with a 45 minute commute (<code>AGEP=30&amp;JWMNP=45</code>), which keeps the response short.</p>
+<p>A request to the PUMS API consists of the base address for the year, a <code>get=</code> list of variables, a <code>for=</code> clause for the geography, any optional filters, and the key. Before writing the main query function, one small request shows what the API sends back. Sex, person weight, age, arrival time at work, travel time to work, and education for people in North Carolina (<code>for=state:37</code>) who are 30 years old with a 45 minute commute (<code>AGEP=30&amp;JWMNP=45</code>), which keeps the response short.</p>
 <p>The key is read from the <code>CENSUS_KEY</code> environment variable instead of being typed into the document, because this code is published with the site.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb23"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb23-1"><a href="#cb23-1" aria-hidden="true" tabindex="-1"></a>census_key <span class="ot">&lt;-</span> <span class="fu">Sys.getenv</span>(<span class="st">"CENSUS_KEY"</span>)</span>
@@ -366,7 +374,7 @@ window.Quarto = {
 </div>
 </div>
 <p>A status of <code>200</code> means the request was successful. In the JSON body returned, the first array is the header and each following array is one person’s record. Every value arrives as a string. <code>AGEP</code> and <code>JWMNP</code> appear twice. The API repeats any variable used as a filter at the end of each row. The geography comes back as a column named <code>state</code>.</p>
-<p>The first helper turns the JSON text into a tibble. It uses the first row as the column names and drops any repeated column. First it checks if the return is JSON to ensure there is no error response.</p>
+<p>The helper turns the JSON text into a tibble. It uses the first row as the column names and drops any repeated column. First it checks if the return is JSON to ensure there is no error response.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb27"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb27-1"><a href="#cb27-1" aria-hidden="true" tabindex="-1"></a><span class="co"># turn the text of a Census API reply into a tibble of character columns.</span></span>
 <span id="cb27-2"><a href="#cb27-2" aria-hidden="true" tabindex="-1"></a><span class="co"># the result is an array of arrays: row 1 is the header, the rest is data.</span></span>
@@ -382,7 +390,7 @@ window.Quarto = {
 <span id="cb27-12"><a href="#cb27-12" aria-hidden="true" tabindex="-1"></a>  <span class="fu">as_tibble</span>(mat)</span>
 <span id="cb27-13"><a href="#cb27-13" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The second helper works on the object <code>GET()</code> returns. It checks the HTTP status and stops with the API’s own message when something is wrong. For example, a misspelled variable name produces a status <code>400</code> with a short explanation, and a query that matches no records produces a <code>204</code>. Otherwise it passes the text to the first helper.</p>
+<p>This helper works on the object <code>GET()</code> returns. It checks the HTTP status and stops with the API’s own message when something is wrong. For example, a misspelled variable name produces a status <code>400</code> with a short explanation, and a query that matches no records produces a <code>204</code>. Otherwise it passes the text to the first helper.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb28"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb28-1"><a href="#cb28-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert the object returned by GET() into a tibble</span></span>
 <span id="cb28-2"><a href="#cb28-2" aria-hidden="true" tabindex="-1"></a>pums_response_to_tibble <span class="ot">&lt;-</span> <span class="cf">function</span>(resp) {</span>
@@ -511,7 +519,7 @@ window.Quarto = {
 <section id="time-variables" class="level2">
 <h2 class="anchored" data-anchor-id="time-variables">Time variables</h2>
 <p>We have two times variables. <code>JWAP</code> (when the person arrives at work) and <code>JWDP</code> (when they leave for work). Neither comes as a clock time. Each value is a code for a window of time, such as “7:30 a.m. to 7:34 a.m.”. To use them as times, each window is replaced by its midpoint.</p>
-<p><code>JWAP</code> uses 5 minute windows, while <code>JWDP</code> uses 5, 10, and 30 minute windows. So the helper reads the start and end times out of each label. The midpoint is the time halfway between the two times in the label, so the midpoint of “7:30 a.m. to 7:34 a.m.” is 7:32. Codes that mean “not applicable” (not a worker, or worked from home) or “suppressed” have no window, so they become <code>NA</code>.</p>
+<p><code>JWAP</code> uses 5 minute windows, while <code>JWDP</code> uses 5, 10, and 30 minute windows. The helper reads the start and end times out of each label. The midpoint is the time halfway between the two times in the label, so the midpoint of “7:30 a.m. to 7:34 a.m.” is 7:32. Codes that mean “not applicable” (not a worker, or worked from home) or “suppressed” have no window, so they become <code>NA</code>.</p>
 <p>The result is a <code>lubridate</code> period, which stores the time of day as hours, minutes, and seconds after midnight.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb42"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb42-1"><a href="#cb42-1" aria-hidden="true" tabindex="-1"></a><span class="co"># "7:30 a.m." -&gt; seconds after midnight. 12 a.m. is hour 0 and 12 p.m. is</span></span>
@@ -581,12 +589,12 @@ window.Quarto = {
 # ℹ 48 more rows</code></pre>
 </div>
 </div>
-<p><code>JWAP</code> is now a period column. The first row’s code <code>88</code> became 7:32, the middle of its window, and a person with no arrival time would show <code>NA</code>. Every variable type the project needs can be converted with our helper functions.</p>
+<p><code>JWAP</code> is now a period column. The first row’s code <code>88</code> became 7:32, the middle of its window, and a person with no arrival time would show <code>NA</code>. Every variable type the project needs can be converted with the helper functions.</p>
 </section>
 <section id="querying-one-year" class="level2">
 <h2 class="anchored" data-anchor-id="querying-one-year">Querying one year</h2>
-<p>The helpers so far can: turn a response into a tibble, and convert codes into numbers, factors, and times. The single-year query function chains them. It checks the user’s inputs, builds the request URL from the survey year, the variables, and the geography, sends the request with <code>GET()</code>, turns the reply into a tibble, and converts each column to its proper type using that year’s variable lists.</p>
-<p>The first small helper builds the URL.</p>
+<p>The helper functions can turn a response into a tibble, and convert codes into numbers, factors, and times. The single-year query function chains them. It checks the user’s inputs, builds the request URL from the survey year, the variables, and the geography, sends the request with <code>GET()</code>, turns the reply into a tibble, and converts each column to its proper type using that year’s variable lists.</p>
+<p>Builds the URL.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb51"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb51-1"><a href="#cb51-1" aria-hidden="true" tabindex="-1"></a><span class="co"># Build the request URL. The key is part of it, so don't print the result.</span></span>
 <span id="cb51-2"><a href="#cb51-2" aria-hidden="true" tabindex="-1"></a>build_pums_url <span class="ot">&lt;-</span> <span class="cf">function</span>(year, vars, for_clause, key) {</span>
@@ -596,7 +604,7 @@ window.Quarto = {
 <span id="cb51-6"><a href="#cb51-6" aria-hidden="true" tabindex="-1"></a>         <span class="st">"&amp;key="</span>, key)</span>
 <span id="cb51-7"><a href="#cb51-7" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The second helper applies the right conversion to each requested column.</p>
+<p>Apply the right conversion to each requested column.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb52"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb52-1"><a href="#cb52-1" aria-hidden="true" tabindex="-1"></a><span class="co"># convert each requested column using one year's variable lists.</span></span>
 <span id="cb52-2"><a href="#cb52-2" aria-hidden="true" tabindex="-1"></a>convert_pums_types <span class="ot">&lt;-</span> <span class="cf">function</span>(data, year_lists, numeric_vars, cat_vars) {</span>
@@ -618,7 +626,7 @@ window.Quarto = {
 <section id="checking-the-inputs" class="level3">
 <h3 class="anchored" data-anchor-id="checking-the-inputs">Checking the inputs</h3>
 <p>The query should fail early, with a message that says what to fix, instead of sending a bad request to the API. <code>year</code> must be a single value from 2021 to 2024. <code>numeric_vars</code> may only contain <code>AGEP</code>, <code>GASP</code>, <code>GRPIP</code>, <code>JWAP</code>, <code>JWDP</code>, <code>JWMNP</code>, and <code>PWGTP</code>, and needs at least one variable other than <code>PWGTP</code>. The person weight <code>PWGTP</code> is always returned, so it is added if the user leaves it out. <code>cat_vars</code> may only contain <code>FER</code>, <code>HHL</code>, <code>SCH</code>, <code>SCHL</code>, and <code>SEX</code>, and needs at least one.</p>
-<p>The first helper checks one set of variable names against its allowed values, so the same code serves both arguments.</p>
+<p>This checks one set of variable names against its allowed values, so the same code serves both arguments.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb53"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb53-1"><a href="#cb53-1" aria-hidden="true" tabindex="-1"></a>pums_numeric_options <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"AGEP"</span>, <span class="st">"GASP"</span>, <span class="st">"GRPIP"</span>, <span class="st">"JWAP"</span>, <span class="st">"JWDP"</span>, <span class="st">"JWMNP"</span>)</span>
 <span id="cb53-2"><a href="#cb53-2" aria-hidden="true" tabindex="-1"></a>pums_cat_options     <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="st">"FER"</span>, <span class="st">"HHL"</span>, <span class="st">"SCH"</span>, <span class="st">"SCHL"</span>, <span class="st">"SEX"</span>)</span>
@@ -642,7 +650,7 @@ window.Quarto = {
 <span id="cb53-20"><a href="#cb53-20" aria-hidden="true" tabindex="-1"></a>  }</span>
 <span id="cb53-21"><a href="#cb53-21" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The second helper runs all the checks and returns the cleaned arguments, with <code>PWGTP</code> added to the numeric variables if it was missing.</p>
+<p>Runs all the checks and return the cleaned arguments, with <code>PWGTP</code> added to the numeric variables if it was missing.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb54"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb54-1"><a href="#cb54-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check the user's inputs and return them cleaned up.</span></span>
 <span id="cb54-2"><a href="#cb54-2" aria-hidden="true" tabindex="-1"></a>validate_pums_args <span class="ot">&lt;-</span> <span class="cf">function</span>(year, numeric_vars, cat_vars) {</span>
@@ -665,8 +673,8 @@ window.Quarto = {
 </section>
 <section id="choosing-the-geography" class="level3">
 <h3 class="anchored" data-anchor-id="choosing-the-geography">Choosing the geography</h3>
-<p>The user picks a geography level, <code>"Region"</code>, <code>"Division"</code>, or <code>"State"</code>, and then one place at that level, such as <code>"North Carolina"</code>. The API wants this as a <code>for=</code> clause such as <code>state:37</code>, so the helpers below translate the user’s choice. The level has to be exactly one of the three. <code>"All"</code> is not a level because of the size of the data. The place is given as a code or as the label stored in the saved lists, such as <code>37</code> or <code>"North Carolina/NC"</code>, in any capitalization, and the allowed places come from the lists saved in <code>pums_vars</code>. The value <code>"all"</code> returns every region, division, or state. If no place is given, each level has a default that contains North Carolina.</p>
-<p>The first helpers set the defaults and look up the allowed places for a level.</p>
+<p>The user picks a geography level, <code>"Region"</code>, <code>"Division"</code>, or <code>"State"</code>, and then one place at that level, such as <code>"North Carolina"</code>. The API wants this as a <code>for=</code> clause such as <code>state:37</code>. The helper functions below processes the user’s choice. The level has to be exactly one of the three. <code>"All"</code> is not a level because of the size of the data. The place is given as a code or as the label stored in the saved lists, such as <code>37</code> or <code>"North Carolina/NC"</code>, in any capitalization, and the allowed places come from the lists saved in <code>pums_vars</code>. The value <code>"all"</code> returns every region, division, or state. If no place is given, each level has a default that contains North Carolina.</p>
+<p>Set the defaults and look up the allowed places for a level.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb55"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb55-1"><a href="#cb55-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the place used when the user gives a level but no value</span></span>
 <span id="cb55-2"><a href="#cb55-2" aria-hidden="true" tabindex="-1"></a>default_geography <span class="ot">&lt;-</span> <span class="fu">c</span>(<span class="at">region =</span> <span class="st">"South"</span>,</span>
@@ -679,7 +687,7 @@ window.Quarto = {
 <span id="cb55-9"><a href="#cb55-9" aria-hidden="true" tabindex="-1"></a>  items[<span class="sc">!</span><span class="fu">grepl</span>(<span class="st">"^Puerto Rico"</span>, items)]</span>
 <span id="cb55-10"><a href="#cb55-10" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The next helpers check the level, find the code for the place the user typed, and put the <code>for=</code> clause together. A value that matches nothing stops with a message that shows what is allowed.</p>
+<p>Check the level, find the code for the place the user typed, and put the <code>for=</code> clause together. A value that matches nothing stops with a message that shows what is allowed.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb56"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb56-1"><a href="#cb56-1" aria-hidden="true" tabindex="-1"></a><span class="co"># check the geography level and return it in lowercase, as the API spells it</span></span>
 <span id="cb56-2"><a href="#cb56-2" aria-hidden="true" tabindex="-1"></a>check_geography_level <span class="ot">&lt;-</span> <span class="cf">function</span>(geography) {</span>
@@ -850,7 +858,7 @@ window.Quarto = {
 </section>
 <section id="other-geography-levels" class="level3">
 <h3 class="anchored" data-anchor-id="other-geography-levels">Other geography levels</h3>
-<p>The geography level changes with <code>geography</code>. This call asks for the New England division in 2023, the smallest of the divisions to download. The <code>division</code> column holds the division’s label, and the result carries the <code>census</code> class.</p>
+<p>The geography level changes with <code>geography</code>. This call is for the New England division in 2023, the smallest of the divisions to download. The <code>division</code> column holds the division’s label, and the result carries the <code>census</code> class.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb79"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb79-1"><a href="#cb79-1" aria-hidden="true" tabindex="-1"></a>new_england_2023 <span class="ot">&lt;-</span> <span class="fu">get_pums_year</span>(<span class="at">year =</span> <span class="dv">2023</span>,</span>
 <span id="cb79-2"><a href="#cb79-2" aria-hidden="true" tabindex="-1"></a>                                  <span class="at">geography =</span> <span class="st">"Division"</span>,</span>
@@ -880,7 +888,7 @@ window.Quarto = {
 </section>
 <section id="calls-that-should-fail" class="level3">
 <h3 class="anchored" data-anchor-id="calls-that-should-fail">Calls that should fail</h3>
-<p>Each call below breaks one rule, and the validation checks are run before anything is sent to the API. Set to keep going after an error so that every message shows.</p>
+<p>The following examples test the main validation errors.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb83"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb83-1"><a href="#cb83-1" aria-hidden="true" tabindex="-1"></a><span class="fu">get_pums_year</span>(<span class="at">year =</span> <span class="dv">2020</span>)  <span class="co"># year out of range</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
@@ -984,7 +992,7 @@ window.Quarto = {
 <span id="cb111-21"><a href="#cb111-21" aria-hidden="true" tabindex="-1"></a>  data</span>
 <span id="cb111-22"><a href="#cb111-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>This call asks for all four years for Wyoming, with the weight and travel time as the numeric variables and sex and education as the categorical variables.</p>
+<p>This call is for all four years for Wyoming, with the weight and travel time as the numeric variables and sex and education as the categorical variables.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb112"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb112-1"><a href="#cb112-1" aria-hidden="true" tabindex="-1"></a>wyoming_all_years <span class="ot">&lt;-</span> <span class="fu">get_pums_years</span>(</span>
 <span id="cb112-2"><a href="#cb112-2" aria-hidden="true" tabindex="-1"></a>  <span class="at">years =</span> <span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>,</span>
@@ -1020,7 +1028,7 @@ window.Quarto = {
 <pre><code>[1] TRUE</code></pre>
 </div>
 </div>
-<p>The <code>year</code> column comes first and the other columns keep their types from the single-year function. The table shows how many records each survey year contributed, and the object still has the <code>census</code> class. Years can be given in any order and with repeats. They come back sorted, one copy each.</p>
+<p>The table shows how many records each survey year contributed, and the object still has the <code>census</code> class. Years can be given in any order and with repeats. They come back sorted, one copy each.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb118"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb118-1"><a href="#cb118-1" aria-hidden="true" tabindex="-1"></a><span class="fu">levels</span>(<span class="fu">get_pums_years</span>(<span class="at">years =</span> <span class="fu">c</span>(<span class="dv">2024</span>, <span class="dv">2022</span>, <span class="dv">2024</span>),</span>
 <span id="cb118-2"><a href="#cb118-2" aria-hidden="true" tabindex="-1"></a>                      <span class="at">geography_value =</span> <span class="st">"Wyoming/WY"</span>)<span class="sc">$</span>year)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
@@ -1072,7 +1080,7 @@ window.Quarto = {
 <p>The mean and standard deviation use the weighted formulas from the assignment document, where <span class="math inline">\(x_i\)</span> is a value and <span class="math inline">\(w_i\)</span> is its weight (<code>PWGTP</code>):</p>
 <p><span class="math display">\[\bar{x} = \frac{\sum x_i w_i}{\sum w_i}, \qquad s = \sqrt{\frac{\sum x_i^2 w_i}{\sum w_i} - \bar{x}^2}\]</span></p>
 <p>Some people do not have a value for a variable, such as travel time for someone who does not work. Those rows are left out of that variable’s mean and standard deviation along with their weights, so the result describe people who have a valid value. Counts are also weighted. The count for a level is the sum of the weights in that level, which estimates the number of people. The number of sample records at each level is returned as well.</p>
-<p>The first helpers do the arithmetic.</p>
+<p>Do the arithmetic.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb130"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb130-1"><a href="#cb130-1" aria-hidden="true" tabindex="-1"></a><span class="co"># weighted mean of x with weights w. missing values are left out with their weights.</span></span>
 <span id="cb130-2"><a href="#cb130-2" aria-hidden="true" tabindex="-1"></a>weighted_mean <span class="ot">&lt;-</span> <span class="cf">function</span>(x, w) {</span>
@@ -1097,7 +1105,7 @@ window.Quarto = {
 <span id="cb130-21"><a href="#cb130-21" aria-hidden="true" tabindex="-1"></a>  <span class="fu">c</span>(totals)</span>
 <span id="cb130-22"><a href="#cb130-22" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The summary method decides which variables can be summarized, checks the user’s choices with the same <code>check_choices()</code> helper used earlier, and returns a named list. Its first argument is called <code>object</code> so that it matches the <code>summary()</code> generic.</p>
+<p>The summary method decides which variables can be summarized, checks the user’s choices with the same <code>check_choices()</code> used earlier, and returns a named list.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb131"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb131-1"><a href="#cb131-1" aria-hidden="true" tabindex="-1"></a><span class="co"># summary method for census tibbles. returns a named list:</span></span>
 <span id="cb131-2"><a href="#cb131-2" aria-hidden="true" tabindex="-1"></a><span class="co">#   means, sds - weighted mean and standard deviation of each numeric variable</span></span>
@@ -1370,7 +1378,7 @@ $records$SEX
 </div>
 <section id="calls-that-should-fail-2" class="level3">
 <h3 class="anchored" data-anchor-id="calls-that-should-fail-2">Calls that should fail</h3>
-<p>Each call breaks a rule. Set to keep going after an error so every message is displayed.</p>
+<p>The following examples test the main validation errors.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb144"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb144-1"><a href="#cb144-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(wyoming_all_years, <span class="at">numeric_vars =</span> <span class="st">"SEX"</span>)  <span class="co"># SEX is a factor</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
@@ -1408,8 +1416,8 @@ $records$SEX
 <section id="plotting-a-census-tibble" class="level2">
 <h2 class="anchored" data-anchor-id="plotting-a-census-tibble">Plotting a census tibble</h2>
 <p>The plot method draws a boxplot of one numeric variable at each level of one categorical variable. The user has to name both, as column-name strings. The categorical variable can be any factor in the tibble, including <code>year</code>. The numeric variable can be any numeric column other than <code>PWGTP</code>, and the time variables are left out.</p>
-<p>The plot uses <code>weight = PWGTP</code> inside <code>aes()</code>, so each record counts as the number of people it represents and the boxes show the weighted quartiles. People with a missing value for the numeric variable are left out of the plot. Because the column names are strings, <code>.data[[cat_var]]</code> picks out the column by name inside <code>aes()</code>, which does the same job as <code>get(cat_var)</code>.</p>
-<p>The first helpers find which columns can be plotted and check that the user named exactly one of each kind.</p>
+<p>The plot uses <code>weight = PWGTP</code> inside <code>aes()</code>, so each record counts as the number of people it represents and the boxes show the weighted quartiles. People with a missing value for the numeric variable are left out of the plot. <code>.data[[cat_var]]</code> allows the method to use column names supplied as strings.</p>
+<p>Find which columns can be plotted and check that the user named exactly one of each kind.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb156"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb156-1"><a href="#cb156-1" aria-hidden="true" tabindex="-1"></a><span class="co"># the columns a census tibble can be plotted by: factors for the categories,</span></span>
 <span id="cb156-2"><a href="#cb156-2" aria-hidden="true" tabindex="-1"></a><span class="co"># and numeric columns other than the weight (times are left out) for the values</span></span>
@@ -1430,7 +1438,7 @@ $records$SEX
 <span id="cb156-17"><a href="#cb156-17" aria-hidden="true" tabindex="-1"></a>  <span class="fu">check_choices</span>(value, allowed, arg_name)</span>
 <span id="cb156-18"><a href="#cb156-18" aria-hidden="true" tabindex="-1"></a>}</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 </div>
-<p>The plot method checks the inputs, then builds the plot. Its first argument is called <code>x</code> to match the <code>plot()</code> generic.</p>
+<p>The plot method checks the inputs, then builds the plot.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb157"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb157-1"><a href="#cb157-1" aria-hidden="true" tabindex="-1"></a><span class="co"># plot method for census tibbles: a weighted boxplot of num_var at each level of cat_var.</span></span>
 <span id="cb157-2"><a href="#cb157-2" aria-hidden="true" tabindex="-1"></a>plot.census <span class="ot">&lt;-</span> <span class="cf">function</span>(x, cat_var, num_var) {</span>
@@ -1491,7 +1499,7 @@ $records$SEX
 </div>
 <section id="calls-that-should-fail-3" class="level3">
 <h3 class="anchored" data-anchor-id="calls-that-should-fail-3">Calls that should fail</h3>
-<p>Each call breaks a rule. The chunk keeps going after an error so every message shows.</p>
+<p>The following examples test the main validation errors.</p>
 <div class="cell">
 <div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb161"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb161-1"><a href="#cb161-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(wyoming_all_years)  <span class="co"># both variables are required</span></span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
 <div class="cell-output cell-output-error">
@@ -1529,9 +1537,563 @@ $records$SEX
 ! num_var cannot include JWAP. Choose from: JWMNP.</code></pre>
 </div>
 </div>
-
-
 </section>
+</section>
+</section>
+<section id="investigation-commute-time-age-and-education-in-north-carolina" class="level1">
+<h1>Investigation: Commute Time, Age, and Education in North Carolina</h1>
+<p>This section uses the functions built above to ask one question about North Carolina: <strong>do commute time and age differ by education level, and did that change from 2021 to 2024?</strong></p>
+<p>Commute time (<code>JWMNP</code>) is missing for anyone who is not a worker and for workers who work from home, so every commute average here describes people who travel to work.</p>
+<p>Education (<code>SCHL</code>) is the highest level a person has reached, and it has 25 levels. Children are on the scale too, in grades up to 12th, and people under 3 years old have their own “N/A” level.</p>
+<p>Age and education are linked by construction. A person cannot have a college degree at age 10, so some of the age differences between education levels only reflect who has had time to finish school.</p>
+<section id="getting-the-data" class="level2">
+<h2 class="anchored" data-anchor-id="getting-the-data">Getting the data</h2>
+<p>One call to <code>get_pums_years()</code> downloads all four years for North Carolina, the default geography, with commute time and age as the numeric variables and education as the categorical variable. The result is saved to <code>data/nc_2021_2024.rds</code>.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb175"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb175-1"><a href="#cb175-1" aria-hidden="true" tabindex="-1"></a><span class="cf">if</span> (<span class="sc">!</span><span class="fu">file.exists</span>(<span class="st">"data/nc_2021_2024.rds"</span>)) {</span>
+<span id="cb175-2"><a href="#cb175-2" aria-hidden="true" tabindex="-1"></a>  nc_2021_2024 <span class="ot">&lt;-</span> <span class="fu">get_pums_years</span>(<span class="at">years =</span> <span class="dv">2021</span><span class="sc">:</span><span class="dv">2024</span>,</span>
+<span id="cb175-3"><a href="#cb175-3" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">numeric_vars =</span> <span class="fu">c</span>(<span class="st">"JWMNP"</span>, <span class="st">"AGEP"</span>),</span>
+<span id="cb175-4"><a href="#cb175-4" aria-hidden="true" tabindex="-1"></a>                                 <span class="at">cat_vars =</span> <span class="st">"SCHL"</span>)</span>
+<span id="cb175-5"><a href="#cb175-5" aria-hidden="true" tabindex="-1"></a>  <span class="fu">saveRDS</span>(nc_2021_2024, <span class="st">"data/nc_2021_2024.rds"</span>)</span>
+<span id="cb175-6"><a href="#cb175-6" aria-hidden="true" tabindex="-1"></a>}</span>
+<span id="cb175-7"><a href="#cb175-7" aria-hidden="true" tabindex="-1"></a> </span>
+<span id="cb175-8"><a href="#cb175-8" aria-hidden="true" tabindex="-1"></a>nc_2021_2024 <span class="ot">&lt;-</span> <span class="fu">readRDS</span>(<span class="st">"data/nc_2021_2024.rds"</span>)</span>
+<span id="cb175-9"><a href="#cb175-9" aria-hidden="true" tabindex="-1"></a>nc_2021_2024</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code># A tibble: 439,757 × 6
+   year  JWMNP  AGEP PWGTP SCHL                                         state   
+   &lt;fct&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;dbl&gt; &lt;fct&gt;                                        &lt;fct&gt;   
+ 1 2021      5    21    78 1 or more years of college credit, no degree North C…
+ 2 2021     NA    58     9 Regular high school diploma                  North C…
+ 3 2021     NA    20    32 1 or more years of college credit, no degree North C…
+ 4 2021     NA    40     6 12th grade - no diploma                      North C…
+ 5 2021      5    21   119 1 or more years of college credit, no degree North C…
+ 6 2021     NA    20    65 1 or more years of college credit, no degree North C…
+ 7 2021     NA    41    11 1 or more years of college credit, no degree North C…
+ 8 2021     NA    18    67 Regular high school diploma                  North C…
+ 9 2021     NA    19    19 1 or more years of college credit, no degree North C…
+10 2021     NA    19   100 1 or more years of college credit, no degree North C…
+# ℹ 439,747 more rows</code></pre>
+</div>
+</div>
+</section>
+<section id="summaries" class="level2">
+<h2 class="anchored" data-anchor-id="summaries">Summaries</h2>
+<p><code>summary()</code> with no other arguments reports the weighted mean and standard deviation of commute time and age, and the estimated number of people and the number of sample records at each level of education, year, and the geography column.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb177"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb177-1"><a href="#cb177-1" aria-hidden="true" tabindex="-1"></a><span class="fu">summary</span>(nc_2021_2024)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>$means
+   JWMNP     AGEP 
+25.20114 39.67205 
+
+$sds
+   JWMNP     AGEP 
+21.11203 23.20707 
+
+$counts
+$counts$year
+    2021     2022     2023     2024 
+10551162 10698973 10835491 11046024 
+
+$counts$SCHL
+                   N/A (less than 3 years old) 
+                                       1383353 
+                        No schooling completed 
+                                       1407630 
+                     Nursery school, preschool 
+                                        609831 
+                                  Kindergarten 
+                                        529092 
+                                       Grade 1 
+                                        506482 
+                                       Grade 2 
+                                        533235 
+                                       Grade 3 
+                                        563297 
+                                       Grade 4 
+                                        564748 
+                                       Grade 5 
+                                        611025 
+                                       Grade 6 
+                                        707266 
+                                       Grade 7 
+                                        643558 
+                                       Grade 8 
+                                        833721 
+                                       Grade 9 
+                                        984365 
+                                      Grade 10 
+                                       1031923 
+                                      Grade 11 
+                                       1059704 
+                       12th grade - no diploma 
+                                        545972 
+                   Regular high school diploma 
+                                       7561590 
+                 GED or alternative credential 
+                                       1311785 
+            Some college, but less than 1 year 
+                                       2294490 
+  1 or more years of college credit, no degree 
+                                       4817260 
+                            Associate's degree 
+                                       3272860 
+                             Bachelor's degree 
+                                       7203864 
+                               Master's degree 
+                                       3049810 
+Professional degree beyond a bachelor's degree 
+                                        604210 
+                              Doctorate degree 
+                                        500579 
+
+$counts$state
+North Carolina/NC 
+         43131650 
+
+
+$records
+$records$year
+  2021   2022   2023   2024 
+104337 109230 111920 114270 
+
+$records$SCHL
+                   N/A (less than 3 years old) 
+                                         11400 
+                        No schooling completed 
+                                         12350 
+                     Nursery school, preschool 
+                                          5474 
+                                  Kindergarten 
+                                          4604 
+                                       Grade 1 
+                                          4353 
+                                       Grade 2 
+                                          4593 
+                                       Grade 3 
+                                          4833 
+                                       Grade 4 
+                                          4897 
+                                       Grade 5 
+                                          5223 
+                                       Grade 6 
+                                          6087 
+                                       Grade 7 
+                                          5793 
+                                       Grade 8 
+                                          7924 
+                                       Grade 9 
+                                          9264 
+                                      Grade 10 
+                                         10155 
+                                      Grade 11 
+                                         10229 
+                       12th grade - no diploma 
+                                          6024 
+                   Regular high school diploma 
+                                         78775 
+                 GED or alternative credential 
+                                         15151 
+            Some college, but less than 1 year 
+                                         26349 
+  1 or more years of college credit, no degree 
+                                         49477 
+                            Associate's degree 
+                                         34551 
+                             Bachelor's degree 
+                                         75748 
+                               Master's degree 
+                                         33550 
+Professional degree beyond a bachelor's degree 
+                                          7087 
+                              Doctorate degree 
+                                          5866 
+
+$records$state
+North Carolina/NC 
+           439757 </code></pre>
+</div>
+</div>
+<p>Across the four years, the average commuter in North Carolina travels about 25.2 minutes to work, with a standard deviation of 21.1 minutes, so commute times vary widely. The average age is 39.7 years. The weighted counts by year are 10.55 million (2021), 10.70 million (2022), 10.84 million (2023), and 11.05 million (2024). These numbers are similar to that of North Carolina’s population, suggesting the weights are working as intended. The counts by education and by state add all four years together, totalling 43.1 million.</p>
+<p>The summary reports one overall mean, so to compare years the data is filtered to one year at a time. <code>filter()</code> keeps the <code>census</code> class, so <code>summary()</code> dispatches to the census method. This loop summarizes each year and puts the weighted means side by side.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb179"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb179-1"><a href="#cb179-1" aria-hidden="true" tabindex="-1"></a>means_by_year <span class="ot">&lt;-</span> <span class="fu">sapply</span>(<span class="fu">levels</span>(nc_2021_2024<span class="sc">$</span>year), <span class="cf">function</span>(y) {</span>
+<span id="cb179-2"><a href="#cb179-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summary</span>(<span class="fu">filter</span>(nc_2021_2024, year <span class="sc">==</span> y), <span class="at">cat_vars =</span> <span class="st">"year"</span>)<span class="sc">$</span>means</span>
+<span id="cb179-3"><a href="#cb179-3" aria-hidden="true" tabindex="-1"></a>})</span>
+<span id="cb179-4"><a href="#cb179-4" aria-hidden="true" tabindex="-1"></a>means_by_year</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stdout">
+<pre><code>          2021     2022     2023     2024
+JWMNP 24.57827 25.11906 25.26310 25.76062
+AGEP  39.50912 39.63556 39.73035 39.80583</code></pre>
+</div>
+</div>
+<p>Average commute time rose every year, from 24.6 minutes in 2021 to 25.1, 25.3, and 25.8 minutes in 2024. That is an increase of 1.2 minutes, or about 5 percent. Average age rose more slowly, from 39.5 to 39.8 years, an increase of about 0.3 years. This data shows that the commute times increased but not why they increased.</p>
+</section>
+<section id="plots" class="level2">
+<h2 class="anchored" data-anchor-id="plots">Plots</h2>
+<p>The plot method draws a weighted boxplot. Commute time by survey year shows whether the overall distribution moved.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb181"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb181-1"><a href="#cb181-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(nc_2021_2024, <span class="at">cat_var =</span> <span class="st">"year"</span>, <span class="at">num_var =</span> <span class="st">"JWMNP"</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/investigation-plot-year-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The boxes are almost identical across the four years. The median commute is 20 minutes in every year and the upper quartile is 30 minutes in every year. The one change is in 2024, where the lower quartile rises from about 12 to about 14 minutes, so very short commutes became less common. The mean rose from 24.6 to 25.8 minutes while the median stayed at 20, so the increase comes from changes away from the middle of the distribution. The dots above the whiskers are drawn one per record without weights, so they show which commute times occur, not how common they are.</p>
+<p>Education has 25 levels, so the plots below are turned sideways with <code>coord_flip()</code>. Returning a <code>ggplot</code> object.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb182"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb182-1"><a href="#cb182-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(nc_2021_2024, <span class="at">cat_var =</span> <span class="st">"SCHL"</span>, <span class="at">num_var =</span> <span class="st">"JWMNP"</span>) <span class="sc">+</span> <span class="fu">coord_flip</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output cell-output-stderr">
+<pre><code>Warning in rq.fit.br(wx, wy, tau = tau, ...): Solution may be nonunique</code></pre>
+</div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/investigation-plot-commute-education-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>Among people with 12th grade or more, the commute distributions look alike. The median is 20 minutes at every level from 12th grade with no diploma through the doctorate, and the middle half of commutes runs from about 10 to 15 minutes up to 30 minutes. The lower quartile is a little lower, about 10 minutes, for people with a professional degree and for people with some college credit but no degree. The grade-school levels, from nursery school through 11th grade, are based on a handful of adult workers as children do not commute to work. Those boxes should not be interpreted. The N/A level for children under 3 has no commute data and shows an empty row.</p>
+<p>The same data with age as the numeric variable shows the link between age and education.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb184"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb184-1"><a href="#cb184-1" aria-hidden="true" tabindex="-1"></a><span class="fu">plot</span>(nc_2021_2024, <span class="at">cat_var =</span> <span class="st">"SCHL"</span>, <span class="at">num_var =</span> <span class="st">"AGEP"</span>) <span class="sc">+</span> <span class="fu">coord_flip</span>()</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<div>
+<figure class="figure">
+<p><img src="index_files/figure-html/investigation-plot-age-education-1.png" class="img-fluid figure-img" width="672"></p>
+</figure>
+</div>
+</div>
+</div>
+<p>The age distribution follows the education categories partly due to <code>SCHL</code> includes children who have not yet finished their education. The grade-level categories contain both children and a similar number of adults whose education stopped at that level. “No schooling completed” has a wide box, about 3 to 37 years with a median near 5, because it includes children who have not started school as well as adults. From 12th grade with no diploma up through the doctorate, the medians sit in a narrow band of about 43 to 51 years. The highest degrees are somewhat older. The median is about 49 to 51 for master’s, professional, and doctorate degrees, compared with about 46 for a bachelor’s degree.</p>
+</section>
+<section id="did-it-change-from-2021-to-2024" class="level2">
+<h2 class="anchored" data-anchor-id="did-it-change-from-2021-to-2024">Did it change from 2021 to 2024?</h2>
+<p>This table computes the weighted mean commute time and age at each education level in 2021 and in 2024, using the same weighted_mean() as the summary method, and the change between them. It covers adults 25 and older because childrens grade levels have almost no commuters. The last two columns give the number of sample records with a commute time. Levels with small counts can be read with caution.</p>
+<div class="cell">
+<div class="code-copy-outer-scaffold"><div class="sourceCode cell-code" id="cb185"><pre class="sourceCode r code-with-copy"><code class="sourceCode r"><span id="cb185-1"><a href="#cb185-1" aria-hidden="true" tabindex="-1"></a>education_change <span class="ot">&lt;-</span> nc_2021_2024 <span class="sc">|&gt;</span></span>
+<span id="cb185-2"><a href="#cb185-2" aria-hidden="true" tabindex="-1"></a>  <span class="fu">filter</span>(year <span class="sc">%in%</span> <span class="fu">c</span>(<span class="dv">2021</span>, <span class="dv">2024</span>), AGEP <span class="sc">&gt;=</span> <span class="dv">25</span>) <span class="sc">|&gt;</span></span>
+<span id="cb185-3"><a href="#cb185-3" aria-hidden="true" tabindex="-1"></a>  <span class="fu">group_by</span>(SCHL, year) <span class="sc">|&gt;</span></span>
+<span id="cb185-4"><a href="#cb185-4" aria-hidden="true" tabindex="-1"></a>  <span class="fu">summarize</span>(<span class="at">commute   =</span> <span class="fu">weighted_mean</span>(JWMNP, PWGTP),</span>
+<span id="cb185-5"><a href="#cb185-5" aria-hidden="true" tabindex="-1"></a>            <span class="at">age       =</span> <span class="fu">weighted_mean</span>(AGEP, PWGTP),</span>
+<span id="cb185-6"><a href="#cb185-6" aria-hidden="true" tabindex="-1"></a>            <span class="at">commuters =</span> <span class="fu">sum</span>(<span class="sc">!</span><span class="fu">is.na</span>(JWMNP)),</span>
+<span id="cb185-7"><a href="#cb185-7" aria-hidden="true" tabindex="-1"></a>            <span class="at">.groups =</span> <span class="st">"drop"</span>) <span class="sc">|&gt;</span></span>
+<span id="cb185-8"><a href="#cb185-8" aria-hidden="true" tabindex="-1"></a>  <span class="fu">pivot_wider</span>(<span class="at">names_from =</span> year, <span class="at">values_from =</span> <span class="fu">c</span>(commute, age, commuters)) <span class="sc">|&gt;</span></span>
+<span id="cb185-9"><a href="#cb185-9" aria-hidden="true" tabindex="-1"></a>  <span class="fu">mutate</span>(<span class="at">commute_change =</span> commute_2024 <span class="sc">-</span> commute_2021,</span>
+<span id="cb185-10"><a href="#cb185-10" aria-hidden="true" tabindex="-1"></a>         <span class="at">age_change     =</span> age_2024 <span class="sc">-</span> age_2021) <span class="sc">|&gt;</span></span>
+<span id="cb185-11"><a href="#cb185-11" aria-hidden="true" tabindex="-1"></a>  <span class="fu">select</span>(SCHL, commute_2021, commute_2024, commute_change,</span>
+<span id="cb185-12"><a href="#cb185-12" aria-hidden="true" tabindex="-1"></a>         age_2021, age_2024, age_change, commuters_2021, commuters_2024)</span>
+<span id="cb185-13"><a href="#cb185-13" aria-hidden="true" tabindex="-1"></a></span>
+<span id="cb185-14"><a href="#cb185-14" aria-hidden="true" tabindex="-1"></a>knitr<span class="sc">::</span><span class="fu">kable</span>(education_change, <span class="at">digits =</span> <span class="dv">1</span>)</span></code></pre></div><button title="Copy to Clipboard" class="code-copy-button"><i class="bi"></i></button></div>
+<div class="cell-output-display">
+<table class="caption-top table table-sm table-striped small">
+<colgroup>
+<col style="width: 31%">
+<col style="width: 8%">
+<col style="width: 8%">
+<col style="width: 10%">
+<col style="width: 6%">
+<col style="width: 6%">
+<col style="width: 7%">
+<col style="width: 10%">
+<col style="width: 10%">
+</colgroup>
+<thead>
+<tr class="header">
+<th style="text-align: left;">SCHL</th>
+<th style="text-align: right;">commute_2021</th>
+<th style="text-align: right;">commute_2024</th>
+<th style="text-align: right;">commute_change</th>
+<th style="text-align: right;">age_2021</th>
+<th style="text-align: right;">age_2024</th>
+<th style="text-align: right;">age_change</th>
+<th style="text-align: right;">commuters_2021</th>
+<th style="text-align: right;">commuters_2024</th>
+</tr>
+</thead>
+<tbody>
+<tr class="odd">
+<td style="text-align: left;">No schooling completed</td>
+<td style="text-align: right;">29.2</td>
+<td style="text-align: right;">28.3</td>
+<td style="text-align: right;">-0.9</td>
+<td style="text-align: right;">54.4</td>
+<td style="text-align: right;">52.9</td>
+<td style="text-align: right;">-1.4</td>
+<td style="text-align: right;">408</td>
+<td style="text-align: right;">471</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Nursery school, preschool</td>
+<td style="text-align: right;">20.1</td>
+<td style="text-align: right;">30.7</td>
+<td style="text-align: right;">10.6</td>
+<td style="text-align: right;">59.2</td>
+<td style="text-align: right;">42.5</td>
+<td style="text-align: right;">-16.6</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">12</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Kindergarten</td>
+<td style="text-align: right;">14.2</td>
+<td style="text-align: right;">23.5</td>
+<td style="text-align: right;">9.3</td>
+<td style="text-align: right;">47.4</td>
+<td style="text-align: right;">57.4</td>
+<td style="text-align: right;">10.0</td>
+<td style="text-align: right;">4</td>
+<td style="text-align: right;">2</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Grade 1</td>
+<td style="text-align: right;">28.7</td>
+<td style="text-align: right;">35.7</td>
+<td style="text-align: right;">7.1</td>
+<td style="text-align: right;">61.3</td>
+<td style="text-align: right;">44.8</td>
+<td style="text-align: right;">-16.5</td>
+<td style="text-align: right;">7</td>
+<td style="text-align: right;">5</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Grade 2</td>
+<td style="text-align: right;">40.4</td>
+<td style="text-align: right;">42.4</td>
+<td style="text-align: right;">1.9</td>
+<td style="text-align: right;">52.0</td>
+<td style="text-align: right;">51.7</td>
+<td style="text-align: right;">-0.3</td>
+<td style="text-align: right;">18</td>
+<td style="text-align: right;">17</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Grade 3</td>
+<td style="text-align: right;">26.4</td>
+<td style="text-align: right;">25.6</td>
+<td style="text-align: right;">-0.8</td>
+<td style="text-align: right;">53.5</td>
+<td style="text-align: right;">55.7</td>
+<td style="text-align: right;">2.2</td>
+<td style="text-align: right;">42</td>
+<td style="text-align: right;">29</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Grade 4</td>
+<td style="text-align: right;">35.1</td>
+<td style="text-align: right;">26.1</td>
+<td style="text-align: right;">-9.0</td>
+<td style="text-align: right;">48.7</td>
+<td style="text-align: right;">58.3</td>
+<td style="text-align: right;">9.6</td>
+<td style="text-align: right;">33</td>
+<td style="text-align: right;">23</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Grade 5</td>
+<td style="text-align: right;">31.4</td>
+<td style="text-align: right;">32.0</td>
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">51.7</td>
+<td style="text-align: right;">50.3</td>
+<td style="text-align: right;">-1.4</td>
+<td style="text-align: right;">56</td>
+<td style="text-align: right;">58</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Grade 6</td>
+<td style="text-align: right;">26.7</td>
+<td style="text-align: right;">27.6</td>
+<td style="text-align: right;">0.9</td>
+<td style="text-align: right;">51.5</td>
+<td style="text-align: right;">47.9</td>
+<td style="text-align: right;">-3.7</td>
+<td style="text-align: right;">157</td>
+<td style="text-align: right;">169</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Grade 7</td>
+<td style="text-align: right;">23.2</td>
+<td style="text-align: right;">34.9</td>
+<td style="text-align: right;">11.8</td>
+<td style="text-align: right;">59.8</td>
+<td style="text-align: right;">57.2</td>
+<td style="text-align: right;">-2.6</td>
+<td style="text-align: right;">53</td>
+<td style="text-align: right;">45</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Grade 8</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">23.6</td>
+<td style="text-align: right;">-2.7</td>
+<td style="text-align: right;">58.2</td>
+<td style="text-align: right;">58.2</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">183</td>
+<td style="text-align: right;">130</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Grade 9</td>
+<td style="text-align: right;">25.5</td>
+<td style="text-align: right;">28.0</td>
+<td style="text-align: right;">2.5</td>
+<td style="text-align: right;">54.4</td>
+<td style="text-align: right;">52.3</td>
+<td style="text-align: right;">-2.1</td>
+<td style="text-align: right;">291</td>
+<td style="text-align: right;">289</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Grade 10</td>
+<td style="text-align: right;">25.9</td>
+<td style="text-align: right;">25.8</td>
+<td style="text-align: right;">-0.1</td>
+<td style="text-align: right;">55.6</td>
+<td style="text-align: right;">56.6</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">359</td>
+<td style="text-align: right;">319</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Grade 11</td>
+<td style="text-align: right;">23.9</td>
+<td style="text-align: right;">25.3</td>
+<td style="text-align: right;">1.4</td>
+<td style="text-align: right;">55.1</td>
+<td style="text-align: right;">55.0</td>
+<td style="text-align: right;">-0.1</td>
+<td style="text-align: right;">342</td>
+<td style="text-align: right;">368</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">12th grade - no diploma</td>
+<td style="text-align: right;">26.2</td>
+<td style="text-align: right;">27.4</td>
+<td style="text-align: right;">1.1</td>
+<td style="text-align: right;">51.6</td>
+<td style="text-align: right;">52.2</td>
+<td style="text-align: right;">0.6</td>
+<td style="text-align: right;">357</td>
+<td style="text-align: right;">454</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Regular high school diploma</td>
+<td style="text-align: right;">25.1</td>
+<td style="text-align: right;">26.6</td>
+<td style="text-align: right;">1.5</td>
+<td style="text-align: right;">54.2</td>
+<td style="text-align: right;">54.2</td>
+<td style="text-align: right;">-0.1</td>
+<td style="text-align: right;">6148</td>
+<td style="text-align: right;">6952</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">GED or alternative credential</td>
+<td style="text-align: right;">26.9</td>
+<td style="text-align: right;">27.2</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">52.7</td>
+<td style="text-align: right;">52.9</td>
+<td style="text-align: right;">0.2</td>
+<td style="text-align: right;">1209</td>
+<td style="text-align: right;">1392</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Some college, but less than 1 year</td>
+<td style="text-align: right;">25.3</td>
+<td style="text-align: right;">27.6</td>
+<td style="text-align: right;">2.3</td>
+<td style="text-align: right;">53.2</td>
+<td style="text-align: right;">53.2</td>
+<td style="text-align: right;">0.0</td>
+<td style="text-align: right;">2118</td>
+<td style="text-align: right;">2472</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">1 or more years of college credit, no degree</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">26.4</td>
+<td style="text-align: right;">0.1</td>
+<td style="text-align: right;">50.9</td>
+<td style="text-align: right;">51.2</td>
+<td style="text-align: right;">0.3</td>
+<td style="text-align: right;">4253</td>
+<td style="text-align: right;">4537</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Associate’s degree</td>
+<td style="text-align: right;">26.0</td>
+<td style="text-align: right;">26.3</td>
+<td style="text-align: right;">0.3</td>
+<td style="text-align: right;">50.7</td>
+<td style="text-align: right;">51.7</td>
+<td style="text-align: right;">0.9</td>
+<td style="text-align: right;">3785</td>
+<td style="text-align: right;">4235</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Bachelor’s degree</td>
+<td style="text-align: right;">24.4</td>
+<td style="text-align: right;">26.1</td>
+<td style="text-align: right;">1.6</td>
+<td style="text-align: right;">48.9</td>
+<td style="text-align: right;">49.3</td>
+<td style="text-align: right;">0.4</td>
+<td style="text-align: right;">7215</td>
+<td style="text-align: right;">9306</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Master’s degree</td>
+<td style="text-align: right;">24.4</td>
+<td style="text-align: right;">26.4</td>
+<td style="text-align: right;">1.9</td>
+<td style="text-align: right;">50.8</td>
+<td style="text-align: right;">51.1</td>
+<td style="text-align: right;">0.3</td>
+<td style="text-align: right;">3203</td>
+<td style="text-align: right;">4372</td>
+</tr>
+<tr class="odd">
+<td style="text-align: left;">Professional degree beyond a bachelor’s degree</td>
+<td style="text-align: right;">22.8</td>
+<td style="text-align: right;">24.4</td>
+<td style="text-align: right;">1.6</td>
+<td style="text-align: right;">52.4</td>
+<td style="text-align: right;">52.3</td>
+<td style="text-align: right;">-0.2</td>
+<td style="text-align: right;">880</td>
+<td style="text-align: right;">1065</td>
+</tr>
+<tr class="even">
+<td style="text-align: left;">Doctorate degree</td>
+<td style="text-align: right;">24.5</td>
+<td style="text-align: right;">25.5</td>
+<td style="text-align: right;">1.0</td>
+<td style="text-align: right;">53.4</td>
+<td style="text-align: right;">53.7</td>
+<td style="text-align: right;">0.3</td>
+<td style="text-align: right;">592</td>
+<td style="text-align: right;">874</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+<p>Education separates commute times by only a few minutes. Among the levels with at least 500 commuting records in both years, the average commute ranges from 22.8 to 26.9 minutes in 2021 and from 24.4 to 27.6 minutes in 2024. People with a professional degree have the shortest commute in both years, at 22.8 and 24.4 minutes. Every one of these levels had a longer average commute in 2024 than in 2021. The largest increases were for people with some college but less than a year (+2.3 minutes), a master’s degree (+1.9), a bachelor’s degree and a professional degree (+1.6 each), and a regular high school diploma (+1.5). A GED, an associate’s degree, and 1 or more years of college credit without a degree each changed by 0.3 minutes or less. Average age among adults at these levels changed by between −0.2 and +0.9 years. The commute averages cover adults who travel to work, while the age averages cover all adults 25 and older at that level.</p>
+<p>The levels below a high school diploma give noisy averages. In the grade-school levels there are between 2 and 58 commuting records in a year, so large swings, such as +10.6 minutes for nursery school (4 and 12 records) or −9.0 minutes for Grade 4 (33 and 23 records), reflect a handful of people and should be ignored.</p>
+</section>
+<section id="conclusion" class="level2">
+<h2 class="anchored" data-anchor-id="conclusion">Conclusion</h2>
+<p>Among adults in North Carolina, commute time differs only slightly by education level. At the levels with many commuters the average commute is between about 23 and 27 minutes, the median is 20 minutes at every level from 12th grade through a doctorate, and people with a professional degree have the shortest commutes. Age differs by education mostly because of how education is measured, since children appear on the scale up to 12th grade. Among adults, average age only varies from about 49 to 54 years across the levels, with bachelor’s degree holders the youngest.</p>
+<p>Between 2021 and 2024 the average commute rose 1.2 minutes, from 24.6 to 25.8, while the median stayed at 20 minutes and the lower quartile rose from about 12 to about 14 minutes. Every education level with at least 500 commuting records in both years had a longer average commute in 2024, by 0.1 to 2.3 minutes. The largest increases were for people with some college, a master’s degree, a bachelor’s degree, or a professional degree. Average age changed minimally. The data cannot show why commutes got longer, and the biggest changes in the table come from education levels with very few commuters.</p>
+
+
 </section>
 </section>
 
